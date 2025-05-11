@@ -1,0 +1,17 @@
+# venv
+venv/
+
+# dotenv
+.env
+
+# pycache
+__pycache__/
+*.py[cod]
+
+# VSCode settings
+.vscode/
+
+# Outros lixos comuns
+*.log
+*.sqlite3
+*.db
