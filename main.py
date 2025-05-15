@@ -1,13 +1,16 @@
 from transcribe import transcribe
-from download import audio_download
+from youtube import manager
 from resume import resume
+from cache import create_cache
 
 def main():
-    audio_download("https://youtu.be/TucmVFrZptU?si=L6Wac4BEu6xOn-p_")
+    manager.get_youtube("https://www.youtube.com/watch?v=TucmVFrZptU")
+    manager.audio_download()
 
-    transcribe()
+    create_cache()
+    #transcribe()
 
-    resume()
+    #resume()
 if __name__ == "__main__":
     main()
 
