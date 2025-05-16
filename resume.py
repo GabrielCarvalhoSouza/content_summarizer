@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 import google.generativeai as genai
+from youtube import manager
 
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
@@ -9,7 +10,7 @@ genai.configure(api_key=api_key)
 gemini_model = genai.GenerativeModel("models/gemini-2.0-flash")
 
 def resume():
-    with open("transcriptions/transcription.txt", "r", encoding="utf-8") as f:
+    with open(f"cache\\{manager.yt.video_id}\\transcription.txt", "r", encoding="utf-8") as f:
             prompt = f"""
             Você receberá uma transcrição de um vídeo, por favor o resuma
             Algumas instruções:
@@ -23,5 +24,5 @@ def resume():
             Esta é a transcrição: {f.read()} 
             """
     res = gemini_model.generate_content(prompt)
-    with open("resumes/resume.md", "w", encoding="utf-8") as f:
+    with open(f"cache\\{manager.yt.video_id}\\resume.md", "w", encoding="utf-8") as f:
         f.write(res.text)

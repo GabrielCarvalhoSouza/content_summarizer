@@ -11,13 +11,13 @@ class YoutubeManager:
         return self
 
     def audio_already_exists(self):
-        if os.path.exists("audios/audio.mp3"):
+        if os.path.exists(f"cache\\{self.yt.video_id}\\audio.mp3"):
             return True
         return False
 
     def audio_download(self):
         if not self.audio_already_exists():
             ys = self.yt.streams.get_audio_only()
-            ys.download(output_path="audios", filename="audio.mp3")
+            ys.download(output_path=f"cache\\{self.yt.video_id}", filename="audio.mp3")
 
 manager = YoutubeManager()
