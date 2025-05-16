@@ -20,8 +20,4 @@ class YoutubeManager:
             ys = self.yt.streams.get_audio_only()
             ys.download(output_path="audios", filename="audio.mp3")
 
-    def export_to_cache(self):
-        attrs = ["video_id", "title"]
-        return [getattr(self.yt, attr) for attr in attrs]
-
 manager = YoutubeManager()
