@@ -4,9 +4,10 @@ from resume import resume
 from cache import create_cache
 
 def main():
-    manager.get_youtube("https://www.youtube.com/watch?v=TucmVFrZptU")
+    url = "https://youtu.be/8Bzjm6OvBbs?si=oYgUT-Uh3t4Y1Ti5"
+    manager.get_youtube(url)
 
-    create_cache()
+    create_cache(url)
 
     manager.audio_download()
 
