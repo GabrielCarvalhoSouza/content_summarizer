@@ -3,10 +3,12 @@ import json
 import youtube
 from youtube import manager
 
-def create_cache():
+def create_cache(url):
     dictionary = {
         "id": manager.yt.video_id,
-        "title": manager.yt.title
+        "title": manager.yt.title,
+        "channel": manager.yt.author,
+        "url": url
     }
     path = f"cache\\{manager.yt.video_id}"
     os.makedirs(path, exist_ok=True)

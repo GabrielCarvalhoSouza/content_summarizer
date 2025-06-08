@@ -6,23 +6,26 @@ from youtube import manager
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 
-genai.configure(api_key=api_key)
-gemini_model = genai.GenerativeModel("models/gemini-2.0-flash")
+genai.configure(api_key=api_key) # type: ignore[attr-defined]
+gemini_model = genai.GenerativeModel("models/gemini-2.0-flash") # type: ignore[attr-defined]
 
 def resume():
     with open(f"cache\\{manager.yt.video_id}\\transcription.txt", "r", encoding="utf-8") as f:
             prompt = f"""
-            Você receberá uma transcrição de um vídeo, por favor o resuma
-            Algumas instruções:
-                Você pode resumir o vídeo completamente
-                O resumo pode ser longo, mas precisa ser claro e conciso
-                Se você perceber que o vídeo é mais zoeiro tu pode resumir ele zoando tbm, com brincadeiras e tal
-                Se ele tiver uma estrutura semelhante a tópicos tu pode rezumir em tópicos
-                SEMPRE resuma em PT-BR
-                SEMPRE em markdown
-                Tenha a liberdade que quiser para resumir, pode gastar até 600 palavras
-            Esta é a transcrição: {f.read()} 
-            """
+                Você vai receber a transcrição de um vídeo e precisa fazer um resumo claro, direto e natural, como se fosse uma pessoa falando sobre ele.
+
+                Regras:
+                - Resuma tudo que for importante, com clareza e objetividade.
+                - Pode usar tópicos, texto corrido ou um formato híbrido, dependendo do que ficar mais legal e claro.
+                - Use até 1000 palavras, só se realmente precisar.
+                - Se o vídeo for mais descontraído e zoeiro, pode entrar na brincadeira, mas sem perder a clareza e o conteúdo.
+                - Se o vídeo for sério, evite exagerar na zoeira; pode usar uma ou outra piada leve só pra quebrar o clima.
+                - Não mencione que é um resumo de vídeo ou transcrição, nem diga "aqui está o resumo".
+                - Resuma sempre em português e em formato markdown.
+
+                Conteúdo: {f.read()}
+                """
+
     res = gemini_model.generate_content(prompt)
     with open(f"cache\\{manager.yt.video_id}\\resume.md", "w", encoding="utf-8") as f:
         f.write(res.text)

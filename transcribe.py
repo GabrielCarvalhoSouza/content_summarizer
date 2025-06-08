@@ -11,5 +11,7 @@ def transcribe():
     if not transcription_already_exists():
         whisper_model = whisper.load_model("base")
         transcription = whisper_model.transcribe(f"cache\\{manager.yt.video_id}\\audio.mp3")
+        text = transcription.get("text", "")
         with open(f"cache\\{manager.yt.video_id}\\transcription.txt", "w", encoding="utf-8") as f:
-            f.write(transcription["text"])
+            if isinstance(text, str):
+                f.write(text)
