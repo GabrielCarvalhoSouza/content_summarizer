@@ -4,7 +4,7 @@ from resume import resume
 from cache import create_cache
 
 def main():
-    url = "https://youtu.be/8Bzjm6OvBbs?si=oYgUT-Uh3t4Y1Ti5"
+    url = "https://youtu.be/ttzsxHVp2Aw?si=oHhRgnsNdbD57Mzi"
     manager.get_youtube(url)
 
     create_cache(url)
