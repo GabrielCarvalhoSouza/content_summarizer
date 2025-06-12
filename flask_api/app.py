@@ -1,17 +1,16 @@
 import os
 import tempfile
 
-from flask import Flask, jsonify, request
 import whisper
-
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 whisper_model = whisper.load_model("base")
 
 
-@app.route('/transcribe', methods=['POST'])
+@app.route("/transcribe", methods=["POST"])
 def transcribe():
-    audio_file = request.files.get('audio')
+    audio_file = request.files.get("audio")
     if not audio_file:
         return jsonify({"error": "Nenhum arquivo de áudio enviado"}), 400
 

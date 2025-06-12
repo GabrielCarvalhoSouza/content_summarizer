@@ -1,17 +1,20 @@
-import os
 import json
-import youtube
-from youtube import manager
+from pathlib import Path
+
+from youtube_service import youtube_service
+
 
 def create_cache(url):
-    dictionary = {
-        "id": manager.yt.video_id,
-        "title": manager.yt.title,
-        "channel": manager.yt.author,
-        "url": url
+    parent_path = Path(__file__).parent
+    cache_dir_path = parent_path / "cache"
+    video_dir_path = cache_dir_path / youtube_service.yt.video_id
+    video_dir_path.mkdir(parents=True, exist_ok=True)
+    json_path = video_dir_path / "metadata.json"
+    video_metadata = {
+        "id": youtube_service.yt.video_id,
+        "title": youtube_service.yt.title,
+        "channel": youtube_service.yt.author,
+        "url": url,
     }
-    path = f"cache\\{manager.yt.video_id}"
-    os.makedirs(path, exist_ok=True)
-    path = f"cache\\{manager.yt.video_id}\\cache.json"
-    with open(path, "w", encoding="utf-8") as f:
-        cache = json.dump(dictionary, f, ensure_ascii=False, indent=4)
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(video_metadata, f, ensure_ascii=False, indent=4)
