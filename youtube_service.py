@@ -24,6 +24,18 @@ class YoutubeService:
             raise RuntimeError("You must call get_youtube() first")
         return self._yt
 
+    @property
+    def video_id(self):
+        return self.yt.video_id
+
+    @property
+    def title(self):
+        return self.yt.title
+
+    @property
+    def author(self):
+        return self.yt.author
+
     def audio_download(self):
         if path_manager.audio_file_path.exists():
             return

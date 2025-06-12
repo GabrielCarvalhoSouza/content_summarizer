@@ -11,9 +11,9 @@ def create_cache(url):
     video_dir_path.mkdir(parents=True, exist_ok=True)
     json_path = video_dir_path / "metadata.json"
     video_metadata = {
-        "id": youtube_service.yt.video_id,
-        "title": youtube_service.yt.title,
-        "channel": youtube_service.yt.author,
+        "id": youtube_service.video_id,
+        "title": youtube_service.title,
+        "channel": youtube_service.author,
         "url": url,
     }
     with open(json_path, "w", encoding="utf-8") as f:

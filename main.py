@@ -10,7 +10,7 @@ def main():
 
     youtube_service.get_youtube(url)
 
-    path_manager.set_video_id(youtube_service.yt.video_id)
+    path_manager.set_video_id(youtube_service.video_id)
 
     create_cache(url)
 
