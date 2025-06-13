@@ -30,7 +30,6 @@ ignore = ["T201", "COM812", "ANN101", "ANN102"]
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
-line-ending = "lf"
 
 [tool.pyright]
 reportMissingTypeStubs = false
