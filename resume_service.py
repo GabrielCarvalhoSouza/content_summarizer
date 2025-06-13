@@ -17,7 +17,7 @@ def generate_summary(
     if not transcription_file_path.exists():
         raise FileNotFoundError("Transcription file not found")
 
-    with open(transcription_file_path, "r", encoding="utf-8") as f:
+    with open(transcription_file_path, encoding="utf-8") as f:
         transcription_content = f.read()
         prompt = textwrap.dedent(f"""
             You are an expert summarizer with a knack for clarity and a great sense of humor. Your mission is to distill the following video transcript into a summary that is natural, engaging, and easy to read, as if a friend were explaining the main points.

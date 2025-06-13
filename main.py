@@ -32,21 +32,22 @@ def main():
     if user_language is None:
         raise ValueError("Default locale not found")
 
-    youtube_service.get_youtube(url)
+    youtube_service.load_from_url(url)
 
     path_manager.set_video_id(youtube_service.video_id)
 
+    video_metadata = {
+        "id": youtube_service.video_id,
+        "title": youtube_service.title,
+        "channel": youtube_service.author,
+        "url": url,
+    }
     cache_manager.create_cache(
-        url,
-        path_manager.video_id,
-        youtube_service.title,
-        youtube_service.author,
+        video_metadata,
         path_manager.metadata_file_path,
     )
 
-    youtube_service.audio_download(
-        path_manager.audio_file_path, path_manager.video_dir_path
-    )
+    youtube_service.audio_download(path_manager.audio_file_path)
 
     fetch_transcription(
         api_url, path_manager.transcription_file_path, path_manager.audio_file_path

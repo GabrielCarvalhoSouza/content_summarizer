@@ -1,0 +1,37 @@
+[project]
+name = "content-summarizer"
+version = "0.1.0"
+description = "A flexible platform for processing and summarizing various types of content (videos, articles, audio) using AI models."
+requires-python = ">=3.11"
+
+dependencies = [
+    "flask",
+    "openai-whisper",
+    "google-generativeai",
+    "python-dotenv",
+    "pytubefix",
+    "requests",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "mypy",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "C90", "UP", "D", "SIM", "T20", "ANN", "PTH", "RET", "ERA"]
+ignore = ["T201", "COM812", "ANN101", "ANN102"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+[tool.pyright]
+reportMissingTypeStubs = false
+reportPrivateImportUsage = false
