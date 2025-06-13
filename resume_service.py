@@ -1,29 +1,23 @@
-import locale
-import os
 import textwrap
+from pathlib import Path
 
-import google.generativeai as genai
-from dotenv import load_dotenv
-
-from path_manager import path_manager
-
-load_dotenv()
-api_key = os.getenv("GEMINI_API_KEY")
-
-genai.configure(api_key=api_key)  # type: ignore[reportPrivateImportUsage]
-gemini_model = genai.GenerativeModel("models/gemini-2.0-flash")  # type: ignore[reportPrivateImportUsage]
+from google.generativeai.generative_models import GenerativeModel
 
 
 class ResumeError(Exception):
     pass
 
 
-def resume():
-    if not path_manager.transcription_file_path.exists():
+def generate_summary(
+    gemini_model: GenerativeModel,
+    user_language: str,
+    transcription_file_path: Path,
+    resume_file_path: Path,
+):
+    if not transcription_file_path.exists():
         raise FileNotFoundError("Transcription file not found")
 
-    user_language, _ = locale.getdefaultlocale()
-    with open(path_manager.transcription_file_path, "r", encoding="utf-8") as f:
+    with open(transcription_file_path, "r", encoding="utf-8") as f:
         transcription_content = f.read()
         prompt = textwrap.dedent(f"""
             You are an expert summarizer with a knack for clarity and a great sense of humor. Your mission is to distill the following video transcript into a summary that is natural, engaging, and easy to read, as if a friend were explaining the main points.
@@ -40,7 +34,7 @@ def resume():
             """)
     try:
         res = gemini_model.generate_content(prompt)
-        with open(path_manager.resume_file_path, "w", encoding="utf-8") as f:
+        with open(resume_file_path, "w", encoding="utf-8") as f:
             f.write(res.text)
     except Exception as e:
         raise ResumeError(f"Failed to generate resume: {e}") from e

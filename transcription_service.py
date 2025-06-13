@@ -1,9 +1,8 @@
 import os
+from pathlib import Path
 
 import requests
 from dotenv import load_dotenv
-
-from path_manager import path_manager
 
 load_dotenv()
 
@@ -14,15 +13,14 @@ class TranscriptionError(Exception):
     pass
 
 
-def transcribe():
-    if path_manager.transcription_file_path.exists():
+def fetch_transcription(
+    api_url: str, transcription_file_path: Path, audio_file_path: Path
+):
+    if transcription_file_path.exists():
         return
 
-    if api_url is None:
-        raise TranscriptionError("API_URL is not set")
-
     try:
-        with open(path_manager.audio_file_path, "rb") as f:
+        with open(audio_file_path, "rb") as f:
             files = {"audio": f}
             response = requests.post(api_url, files=files)
         response.raise_for_status()
@@ -32,5 +30,5 @@ def transcribe():
     transcription_data = response.json().get("transcription", {})
     transcription_text = transcription_data.get("text", "")
 
-    with open(path_manager.transcription_file_path, "w", encoding="utf-8") as f:
+    with open(transcription_file_path, "w", encoding="utf-8") as f:
         f.write(transcription_text)

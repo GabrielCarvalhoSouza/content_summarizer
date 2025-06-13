@@ -1,9 +1,8 @@
+from pathlib import Path
 from typing import cast
 
 from pytubefix import Stream, YouTube
 from pytubefix.cli import on_progress
-
-from path_manager import path_manager
 
 
 class DownloadError(Exception):
@@ -12,9 +11,9 @@ class DownloadError(Exception):
 
 class YoutubeService:
     def __init__(self):
-        self._yt = None
+        self._yt: YouTube | None = None
 
-    def get_youtube(self, url):
+    def get_youtube(self, url: str):
         self._yt = YouTube(url, on_progress_callback=on_progress)
         return self
 
@@ -36,18 +35,13 @@ class YoutubeService:
     def author(self):
         return self.yt.author
 
-    def audio_download(self):
-        if path_manager.audio_file_path.exists():
+    def audio_download(self, audio_file_path: Path, video_dir_path: Path):
+        if audio_file_path.exists():
             return
         try:
             ys = cast(Stream, self.yt.streams.get_audio_only())
             if ys is None:
                 raise DownloadError("Audio stream not found")
-            ys.download(
-                output_path=str(path_manager.video_dir_path), filename="audio.mp3"
-            )
+            ys.download(output_path=str(video_dir_path), filename="audio.mp3")
         except Exception as e:
             raise DownloadError(f"Failed to download audio: {e}") from e
-
-
-youtube_service = YoutubeService()

@@ -39,6 +39,3 @@ class PathManager:
     @property
     def metadata_file_path(self):
         return self.video_dir_path / "metadata.json"
-
-
-path_manager = PathManager()
