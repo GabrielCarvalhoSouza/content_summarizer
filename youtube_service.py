@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Self
 
-from pytubefix import YouTube
+from pytubefix import Stream, YouTube
 from pytubefix.cli import on_progress
 
 from video_service_interface import BaseVideoService
@@ -12,7 +12,7 @@ class DownloadError(Exception):
 
 
 class YoutubeService(BaseVideoService):
-    def __init__(self):
+    def __init__(self) -> None:
         self._yt: YouTube | None = None
 
     def load_from_url(self, source_url: str) -> Self:
@@ -20,9 +20,9 @@ class YoutubeService(BaseVideoService):
         return self
 
     @property
-    def yt(self):
+    def yt(self) -> YouTube:
         if self._yt is None:
-            raise RuntimeError("You must call get_youtube() first")
+            raise RuntimeError("You must call load_from_url() first")
         return self._yt
 
     @property
@@ -37,13 +37,13 @@ class YoutubeService(BaseVideoService):
     def author(self) -> str:
         return self.yt.author
 
-    def audio_download(self, audio_file_path: Path):
+    def audio_download(self, audio_file_path: Path) -> None:
         if audio_file_path.exists():
             return
-        output_path = audio_file_path.parent
-        filename = audio_file_path.name
+        output_path: Path = audio_file_path.parent
+        filename: str = audio_file_path.name
         try:
-            ys = self.yt.streams.get_audio_only()
+            ys: Stream | None = self.yt.streams.get_audio_only()
             if ys is None:
                 raise DownloadError("Audio stream not found")
             ys.download(output_path=str(output_path), filename=filename)
