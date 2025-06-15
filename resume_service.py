@@ -2,6 +2,7 @@ import textwrap
 from pathlib import Path
 
 from google.generativeai.generative_models import GenerativeModel
+from google.generativeai.types import GenerateContentResponse
 
 
 class ResumeError(Exception):
@@ -13,13 +14,13 @@ def generate_summary(
     user_language: str,
     transcription_file_path: Path,
     resume_file_path: Path,
-):
+) -> None:
     if not transcription_file_path.exists():
         raise FileNotFoundError("Transcription file not found")
 
     with open(transcription_file_path, encoding="utf-8") as f:
-        transcription_content = f.read()
-        prompt = textwrap.dedent(f"""
+        transcription_content: str = f.read()
+        prompt: str = textwrap.dedent(f"""
             You are an expert summarizer with a knack for clarity and a great sense of humor. Your mission is to distill the following video transcript into a summary that is natural, engaging, and easy to read, as if a friend were explaining the main points.
 
             Rules:
@@ -33,7 +34,7 @@ def generate_summary(
             Content: {transcription_content}
             """)
     try:
-        res = gemini_model.generate_content(prompt)
+        res: GenerateContentResponse = gemini_model.generate_content(prompt)
         with open(resume_file_path, "w", encoding="utf-8") as f:
             f.write(res.text)
     except Exception as e:
