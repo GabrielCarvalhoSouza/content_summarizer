@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import IO
+from typing import IO, Any
 
 import requests
 
@@ -22,7 +22,7 @@ def fetch_transcription(
     except requests.exceptions.RequestException as e:
         raise TranscriptionError(f"Failed to transcribe audio: {e}") from e
 
-    transcription_data: dict = response.json().get("transcription", {})
+    transcription_data: dict[str, Any] = response.json().get("transcription", {})
     transcription_text: str = transcription_data.get("text", "")
 
     with open(transcription_file_path, "w", encoding="utf-8") as f:
