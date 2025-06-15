@@ -18,7 +18,7 @@ def generate_summary(
     if not transcription_file_path.exists():
         raise FileNotFoundError("Transcription file not found")
 
-    with open(transcription_file_path, encoding="utf-8") as f:
+    with transcription_file_path.open("r", encoding="utf-8") as f:
         transcription_content: str = f.read()
         prompt: str = textwrap.dedent(f"""
             You are an expert summarizer with a knack for clarity and a great sense of humor. Your mission is to distill the following video transcript into a summary that is natural, engaging, and easy to read, as if a friend were explaining the main points.
@@ -32,10 +32,10 @@ def generate_summary(
             Be Seamless: Dive right into the summary. Do not use opening phrases like "This is a summary of..." or "The video discusses...".
             Output Language: The summary must be written in {user_language}. Always output in Markdown format.
             Content: {transcription_content}
-            """)
+            """)  # noqa: E501
     try:
         res: GenerateContentResponse = gemini_model.generate_content(prompt)
-        with open(resume_file_path, "w", encoding="utf-8") as f:
+        with resume_file_path.open("w", encoding="utf-8") as f:
             f.write(res.text)
     except Exception as e:
         raise ResumeError(f"Failed to generate resume: {e}") from e

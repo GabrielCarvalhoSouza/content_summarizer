@@ -8,5 +8,5 @@ class CacheManager:
     ) -> None:
         metadata_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(metadata_file_path, "w", encoding="utf-8") as f:
+        with metadata_file_path.open("w", encoding="utf-8") as f:
             json.dump(video_metadata, f, ensure_ascii=False, indent=4)

@@ -15,7 +15,7 @@ def fetch_transcription(
         return
 
     try:
-        with open(audio_file_path, "rb") as f:
+        with audio_file_path.open("rb") as f:
             files: dict[str, IO[bytes]] = {"audio": f}
             response: requests.Response = requests.post(api_url, files=files)
         response.raise_for_status()
@@ -25,5 +25,5 @@ def fetch_transcription(
     transcription_data: dict[str, Any] = response.json().get("transcription", {})
     transcription_text: str = transcription_data.get("text", "")
 
-    with open(transcription_file_path, "w", encoding="utf-8") as f:
+    with transcription_file_path.open("w", encoding="utf-8") as f:
         f.write(transcription_text)
