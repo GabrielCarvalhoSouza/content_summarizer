@@ -34,3 +34,6 @@ indent-style = "space"
 [tool.pyright]
 reportMissingTypeStubs = false
 reportPrivateImportUsage = false
+
+[tool.setuptools]
+package-dir = {"" = "src"}

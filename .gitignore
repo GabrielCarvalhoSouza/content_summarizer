@@ -1,19 +1,28 @@
-# venv
-venv/
 
-# dotenv
+/.venv/
+/venv/
+
+
 .env
+*.env.*
 
-# pycache
+
 __pycache__/
 *.py[cod]
 
-# VSCode settings
-.vscode/
 
-# Outros lixos comuns
+/cache/
 *.log
 *.sqlite3
 *.db
 
-cache/
+
+/dist/
+/build/
+*.egg-info/
+.pytest_cache/
+.coverage
+
+
+.DS_Store
+Thumbs.db
