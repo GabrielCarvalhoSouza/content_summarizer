@@ -1,30 +1,46 @@
 import locale
+import logging
 import os
 
 import google.generativeai as genai
 from dotenv import load_dotenv
 from google.generativeai.generative_models import GenerativeModel
 
-from src.cache_manager import CacheManager
-from src.path_manager import PathManager
-from src.resume_service import generate_summary
-from src.transcription_service import fetch_transcription
-from src.youtube_service import YoutubeService
+from .cache_manager import CacheManager
+from .logger_config import setup_logging
+from .path_manager import PathManager
+from .resume_service import generate_summary
+from .transcription_service import fetch_transcription
+from .youtube_service import YoutubeService
 
 
 def main() -> None:
     load_dotenv()
     api_key: str | None = os.getenv("GEMINI_API_KEY")
     api_url: str | None = os.getenv("API_URL")
-    user_language: str | None
-    user_language, _ = locale.getdefaultlocale()
 
     if api_key is None:
         raise ValueError("GEMINI_API_KEY environment variable not set")
     if api_url is None:
         raise ValueError("API_URL environment variable not set")
-    if user_language is None:
-        user_language = "en"
+
+    setup_logging()
+    logger = logging.getLogger(__name__)
+
+    DEFAULT_LOCALE: str = "en_US"
+    lang_code: str | None
+
+    try:
+        locale.setlocale(locale.LC_ALL, "")
+        lang_code, _ = locale.getlocale()
+    except locale.Error:
+        lang_code = None
+
+    if not lang_code:
+        logger.warning("Failed to detect locale, using default: %s", DEFAULT_LOCALE)
+        lang_code = DEFAULT_LOCALE
+
+    user_language = lang_code
 
     genai.configure(api_key=api_key)
     gemini_model: GenerativeModel = genai.GenerativeModel("models/gemini-2.0-flash")

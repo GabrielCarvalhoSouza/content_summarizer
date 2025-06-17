@@ -4,7 +4,8 @@ from typing import Self
 
 class PathManager:
     def __init__(self) -> None:
-        self.parent_path: Path = Path(__file__).parent
+        self._parent_path: Path = Path(__file__).parent
+        self._root_path: Path = self._parent_path.parent
         self._video_id: str | None = None
 
     def set_video_id(self, video_id: str) -> Self:
@@ -19,7 +20,7 @@ class PathManager:
 
     @property
     def cache_dir_path(self) -> Path:
-        return self.parent_path / "cache"
+        return self._root_path / "cache"
 
     @property
     def video_dir_path(self) -> Path:

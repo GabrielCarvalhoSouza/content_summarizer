@@ -4,7 +4,7 @@ from typing import Self
 from pytubefix import Stream, YouTube
 from pytubefix.cli import on_progress
 
-from src.video_service_interface import BaseVideoService
+from .video_service_interface import BaseVideoService
 
 
 class DownloadError(Exception):

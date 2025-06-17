@@ -11,6 +11,7 @@ dependencies = [
     "python-dotenv",
     "pytubefix",
     "requests",
+    "colorlog>=6.9.0",
 ]
 
 [project.optional-dependencies]
