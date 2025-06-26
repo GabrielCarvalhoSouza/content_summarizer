@@ -12,6 +12,7 @@ dependencies = [
     "pytubefix",
     "requests",
     "colorlog>=6.9.0",
+    "flask-limiter>=3.12",
 ]
 
 [project.optional-dependencies]

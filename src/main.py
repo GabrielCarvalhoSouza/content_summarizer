@@ -15,14 +15,23 @@ from .youtube_service import YoutubeService
 
 
 def main() -> None:
-    load_dotenv()
-    api_key: str | None = os.getenv("GEMINI_API_KEY")
-    api_url: str | None = os.getenv("API_URL")
+    try:
+        load_dotenv()
+        api_key: str | None = os.getenv("GEMINI_API_KEY")
+        api_url: str | None = os.getenv("API_URL")
+        transcription_api_key: str | None = os.getenv("TRANSCRIPTION_API_KEY")
+    except Exception:
+        api_key = None
+        api_url = None
+        transcription_api_key = None
 
     if api_key is None:
         raise ValueError("GEMINI_API_KEY environment variable not set")
     if api_url is None:
         raise ValueError("API_URL environment variable not set")
+
+    if transcription_api_key is None:
+        raise ValueError("TRANSCRIPTION_API_KEY environment variable not set")
 
     setup_logging()
     logger = logging.getLogger(__name__)
@@ -48,7 +57,7 @@ def main() -> None:
     path_manager: PathManager = PathManager()
     youtube_service: YoutubeService = YoutubeService()
     cache_manager: CacheManager = CacheManager()
-    url: str = "https://youtu.be/ttzsxHVp2Aw?si=oHhRgnsNdbD57Mzi"
+    url: str = "https://youtu.be/3pPiYzKaT-c?si=aq0xvMkz5N3ergx_"
 
     youtube_service.load_from_url(url)
 
@@ -60,6 +69,7 @@ def main() -> None:
         "channel": youtube_service.author,
         "url": url,
     }
+
     cache_manager.create_cache(
         video_metadata,
         path_manager.metadata_file_path,
@@ -68,7 +78,10 @@ def main() -> None:
     youtube_service.audio_download(path_manager.audio_file_path)
 
     fetch_transcription(
-        api_url, path_manager.transcription_file_path, path_manager.audio_file_path
+        api_url,
+        path_manager.transcription_file_path,
+        path_manager.audio_file_path,
+        transcription_api_key,
     )
 
     generate_summary(
