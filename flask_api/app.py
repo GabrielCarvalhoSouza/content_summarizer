@@ -62,6 +62,7 @@ def transcribe() -> Response | tuple[Response, int]:
     Returns:
         - 200 OK: transcription result as JSON
         - 400 Bad Request: no audio file was uploaded
+        - 401 Unauthorized: invalid API key
         - 500 Internal Server Error: an error occurred during transcription
 
     """
