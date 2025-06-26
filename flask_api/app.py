@@ -26,7 +26,7 @@ limiter = Limiter(
     storage_uri="memory://",
 )
 
-whisper_model: Whisper = whisper.load_model("base")
+whisper_model: Whisper = whisper.load_model("small")
 parent_path: Path = Path(__file__).parent
 logfile_path: Path = parent_path / "app.log"
 log_formatter = logging.Formatter(
