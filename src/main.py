@@ -15,15 +15,12 @@ from .youtube_service import YoutubeService
 
 
 def main() -> None:
-    try:
-        load_dotenv()
-        api_key: str | None = os.getenv("GEMINI_API_KEY")
-        api_url: str | None = os.getenv("API_URL")
-        transcription_api_key: str | None = os.getenv("TRANSCRIPTION_API_KEY")
-    except Exception:
-        api_key = None
-        api_url = None
-        transcription_api_key = None
+    load_dotenv(dotenv_path="../.env")
+    api_key: str | None = os.getenv("GEMINI_API_KEY")
+    # api_url: str | None = os.getenv("API_URL")
+    api_url: str = "http://150.136.231.30:8001/transcribe"
+    # transcription_api_key: str | None = os.getenv("TRANSCRIPTION_API_KEY")
+    transcription_api_key: str = "xDXc6j5nI0u9MTRSjxZGi4tH_cmB41DhG9a4svweyf4"
 
     if api_key is None:
         raise ValueError("GEMINI_API_KEY environment variable not set")
