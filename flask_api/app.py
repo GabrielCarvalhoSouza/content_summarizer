@@ -23,10 +23,10 @@ app: Flask = Flask(__name__)
 limiter = Limiter(
     get_remote_address,
     app=app,
-    storage_uri="memory://",
+    storage_uri="sqlite:///rate_limits.db",
 )
 
-whisper_model: Whisper = whisper.load_model("small")
+whisper_model: Whisper = whisper.load_model("base")
 parent_path: Path = Path(__file__).parent
 logfile_path: Path = parent_path / "app.log"
 log_formatter = logging.Formatter(

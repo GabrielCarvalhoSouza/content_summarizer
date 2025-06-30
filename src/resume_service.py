@@ -1,8 +1,11 @@
+import logging
 import textwrap
 from pathlib import Path
 
 from google.generativeai.generative_models import GenerativeModel
 from google.generativeai.types import GenerateContentResponse
+
+logger = logging.getLogger(__name__)
 
 
 class ResumeError(Exception):

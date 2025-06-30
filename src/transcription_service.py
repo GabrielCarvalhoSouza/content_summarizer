@@ -23,7 +23,7 @@ def fetch_transcription(
         with audio_file_path.open("rb") as f:
             files: dict[str, IO[bytes]] = {"audio": f}
             response: requests.Response = requests.post(
-                api_url, files=files, timeout=600, headers={"X-Api-Key": api_key}
+                api_url, files=files, timeout=900, headers={"X-Api-Key": api_key}
             )
         response.raise_for_status()
         transcription_text: str = response.json().get("transcription", "")

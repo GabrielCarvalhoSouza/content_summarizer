@@ -15,18 +15,15 @@ from .youtube_service import YoutubeService
 
 
 def main() -> None:
-    load_dotenv(dotenv_path="../.env")
+    load_dotenv()
     api_key: str | None = os.getenv("GEMINI_API_KEY")
-    # api_url: str | None = os.getenv("API_URL")
-    api_url: str = "http://150.136.231.30:8001/transcribe"
-    # transcription_api_key: str | None = os.getenv("TRANSCRIPTION_API_KEY")
-    transcription_api_key: str = "xDXc6j5nI0u9MTRSjxZGi4tH_cmB41DhG9a4svweyf4"
+    api_url: str | None = os.getenv("API_URL")
+    transcription_api_key: str | None = os.getenv("TRANSCRIPTION_API_KEY")
 
     if api_key is None:
         raise ValueError("GEMINI_API_KEY environment variable not set")
     if api_url is None:
         raise ValueError("API_URL environment variable not set")
-
     if transcription_api_key is None:
         raise ValueError("TRANSCRIPTION_API_KEY environment variable not set")
 
@@ -54,7 +51,8 @@ def main() -> None:
     path_manager: PathManager = PathManager()
     youtube_service: YoutubeService = YoutubeService()
     cache_manager: CacheManager = CacheManager()
-    url: str = "https://youtu.be/3pPiYzKaT-c?si=aq0xvMkz5N3ergx_"
+    # url: str = "https://youtu.be/3pPiYzKaT-c?si=aq0xvMkz5N3ergx_"
+    url: str = "https://youtu.be/izLEqe3Mb-U?si=9UnttZxXkbmOjQYl"
 
     youtube_service.load_from_url(url)
 
