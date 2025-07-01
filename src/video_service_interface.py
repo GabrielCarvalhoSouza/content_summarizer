@@ -1,28 +1,82 @@
+"""Download and manage video services.
+
+This module provides an abstract base class for downloading and managing video services.
+
+Classes:
+    BaseVideoService: Abstract base class for video services. It defines the basic
+        methods and properties that a video service should have.
+"""
+
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Self
 
 
 class BaseVideoService(ABC):
+    """Abstract base class for video services.
+
+    This class provides the interface for video services. It defines the basic
+    methods and properties that a video service should have.
+
+    Attributes:
+        video_id (str): The ID of the video.
+        title (str): The title of the video.
+        author (str): The author of the video.
+
+    """
+
     @abstractmethod
     def load_from_url(self, source_url: str) -> Self:
+        """Load a video from a URL.
+
+        Args:
+            source_url (str): The URL of the video to be loaded.
+
+        Returns:
+            Self: The instance of the video service.
+
+        """
         pass
 
     @property
     @abstractmethod
     def video_id(self) -> str:
+        """Get the ID of the video.
+
+        Returns:
+            str: The ID of the video.
+
+        """
         pass
 
     @property
     @abstractmethod
     def title(self) -> str:
+        """Get the title of the video.
+
+        Returns:
+            str: The title of the video.
+
+        """
         pass
 
     @property
     @abstractmethod
     def author(self) -> str:
+        """Get the author of the video.
+
+        Returns:
+            str: The author of the video.
+
+        """
         pass
 
     @abstractmethod
     def audio_download(self, audio_file_path: Path) -> None:
+        """Download the audio file of the video.
+
+        Args:
+            audio_file_path (Path): The path of the audio file to be downloaded.
+
+        """
         pass

@@ -1,3 +1,17 @@
+"""Generate a summary from a transcription file using a generative AI model.
+
+This module provides a function to generate a summary from a transcription file using
+a generative AI model.
+
+Classes:
+    SummaryError: Custom exception for errors during summary generation.
+
+Functions:
+    generate_summary: Generate a summary from a transcription file using a generative
+        AI model.
+
+"""
+
 import logging
 import textwrap
 from pathlib import Path
@@ -8,7 +22,9 @@ from google.generativeai.types import GenerateContentResponse
 logger = logging.getLogger(__name__)
 
 
-class ResumeError(Exception):
+class SummaryError(Exception):
+    """Custom exception for errors during summary generation."""
+
     pass
 
 
@@ -18,7 +34,22 @@ def generate_summary(
     transcription_file_path: Path,
     resume_file_path: Path,
 ) -> None:
+    """Generate a summary from a transcription file using a generative AI model.
+
+    Args:
+        gemini_model (GenerativeModel): The generative AI model to use for summary
+            generation.
+        user_language (str): The language in which the summary should be generated.
+        transcription_file_path (Path): The path to the transcription file.
+        resume_file_path (Path): The path where the generated summary will be saved.
+
+    Raises:
+        FileNotFoundError: If the transcription file does not exist.
+        SummaryError: If an error occurs during the generation of the summary.
+
+    """
     if not transcription_file_path.exists():
+        logger.error("Transcription file not found")
         raise FileNotFoundError("Transcription file not found")
 
     with transcription_file_path.open("r", encoding="utf-8") as f:
@@ -40,5 +71,7 @@ def generate_summary(
         res: GenerateContentResponse = gemini_model.generate_content(prompt)
         with resume_file_path.open("w", encoding="utf-8") as f:
             f.write(res.text)
+        logger.info("Summary generated successfully")
     except Exception as e:
-        raise ResumeError(f"Failed to generate resume: {e}") from e
+        logger.exception("Failed to generate summary")
+        raise SummaryError(f"Failed to generate summary: {e}") from e

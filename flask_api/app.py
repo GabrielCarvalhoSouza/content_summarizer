@@ -77,16 +77,20 @@ def transcribe() -> Response | tuple[Response, int]:
         return jsonify({"error": "No audio file uploaded"}), 400
 
     try:
-        with tempfile.NamedTemporaryFile(suffix=".mp3") as temp_f:
-            temp_filename: str = temp_f.name
-            audio_file.save(temp_filename)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir) / "audio.mp3"
+
+            audio_file.save(temp_path)
+
             logger.info("Initializing transcription")
+
             transcription_result: dict[str, Any] = whisper_model.transcribe(
-                temp_filename
+                str(temp_path)
             )
             logger.info("Transcription completed")
             transcription_text: str = transcription_result.get("text", "")
             return jsonify({"transcription": transcription_text})
+
     except Exception as e:
         logger.exception("Error occurred during transcription")
         return jsonify({"error": str(e)}), 500
