@@ -18,16 +18,12 @@ class PathManager:
     """A class to manage paths for the content summarizer.
 
     Attributes:
-        _parent_path (Path): The path of the parent directory of this file.
-        _root_path (Path): The root path of the project.
         _video_id (str | None): The video ID to be processed.
 
     """
 
     def __init__(self) -> None:
         """Initialize the PathManager."""
-        self._parent_path: Path = Path(__file__).parent
-        self._root_path: Path = self._parent_path.parent
         self._video_id: str | None = None
 
     def set_video_id(self, video_id: str) -> Self:
@@ -42,6 +38,16 @@ class PathManager:
         """
         self._video_id = video_id
         return self
+
+    def get_accelerated_audio_path(self, speed_factor: float) -> Path:
+        """Get the path of the acelerated audio file.
+
+        Returns:
+            Path: The path of the acelerated audio file.
+
+        """
+        _speed_factor = str(speed_factor)
+        return self.video_dir_path / f"audio{_speed_factor}.mp3"
 
     @property
     def video_id(self) -> str:
@@ -60,6 +66,26 @@ class PathManager:
         return self._video_id
 
     @property
+    def parent_path(self) -> Path:
+        """Get the path of the parent directory of this file.
+
+        Returns:
+            Path: The path of the parent directory of this file.
+
+        """
+        return Path(__file__).parent
+
+    @property
+    def root_path(self) -> Path:
+        """Get the root path of the project.
+
+        Returns:
+            Path: The root path of the project.
+
+        """
+        return self.parent_path.parent
+
+    @property
     def cache_dir_path(self) -> Path:
         """Get the path of the cache directory.
 
@@ -67,7 +93,7 @@ class PathManager:
             Path: The path of the cache directory.
 
         """
-        return self._root_path / "cache"
+        return self.root_path / "cache"
 
     @property
     def video_dir_path(self) -> Path:
@@ -100,14 +126,14 @@ class PathManager:
         return self.video_dir_path / "transcription.txt"
 
     @property
-    def resume_file_path(self) -> Path:
-        """Get the path of the resume file.
+    def summary_file_path(self) -> Path:
+        """Get the path of the summary file.
 
         Returns:
-            Path: The path of the resume file.
+            Path: The path of the summary file.
 
         """
-        return self.video_dir_path / "resume.md"
+        return self.video_dir_path / "summary.md"
 
     @property
     def metadata_file_path(self) -> Path:

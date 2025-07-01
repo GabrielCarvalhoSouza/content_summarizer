@@ -1,21 +1,24 @@
 import locale
 import logging
 import os
+from pathlib import Path
 
 import google.generativeai as genai
 from dotenv import load_dotenv
 from google.generativeai.generative_models import GenerativeModel
 
+from .audio_processor import AudioProcessor
 from .cache_manager import CacheManager
 from .logger_config import setup_logging
 from .path_manager import PathManager
-from .resume_service import generate_summary
+from .summary_service import generate_summary
 from .transcription_service import fetch_transcription
 from .youtube_service import YoutubeService
 
 
 def main() -> None:
-    load_dotenv()
+    path_manager: PathManager = PathManager()
+    load_dotenv(path_manager.parent_path / ".env")
     api_key: str | None = os.getenv("GEMINI_API_KEY")
     api_url: str | None = os.getenv("API_URL")
     transcription_api_key: str | None = os.getenv("TRANSCRIPTION_API_KEY")
@@ -45,18 +48,25 @@ def main() -> None:
 
     user_language = lang_code
 
+    speed_factor: float = 1.5
+
     genai.configure(api_key=api_key)
     gemini_model: GenerativeModel = genai.GenerativeModel("models/gemini-2.0-flash")
 
-    path_manager: PathManager = PathManager()
     youtube_service: YoutubeService = YoutubeService()
     cache_manager: CacheManager = CacheManager()
+
     # url: str = "https://youtu.be/3pPiYzKaT-c?si=aq0xvMkz5N3ergx_"
     url: str = "https://youtu.be/izLEqe3Mb-U?si=9UnttZxXkbmOjQYl"
 
     youtube_service.load_from_url(url)
 
     path_manager.set_video_id(youtube_service.video_id)
+
+    accelerated_audio_path: Path = path_manager.get_accelerated_audio_path(speed_factor)
+    audio_processor: AudioProcessor = AudioProcessor(
+        path_manager.audio_file_path, accelerated_audio_path
+    )
 
     video_metadata: dict[str, str] = {
         "id": youtube_service.video_id,
@@ -72,10 +82,12 @@ def main() -> None:
 
     youtube_service.audio_download(path_manager.audio_file_path)
 
+    audio_processor.accelerate_audio(speed_factor)
+
     fetch_transcription(
         api_url,
         path_manager.transcription_file_path,
-        path_manager.audio_file_path,
+        accelerated_audio_path,
         transcription_api_key,
     )
 
@@ -83,7 +95,7 @@ def main() -> None:
         gemini_model,
         user_language,
         path_manager.transcription_file_path,
-        path_manager.resume_file_path,
+        path_manager.summary_file_path,
     )
 
 

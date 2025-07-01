@@ -23,7 +23,7 @@ app: Flask = Flask(__name__)
 limiter = Limiter(
     get_remote_address,
     app=app,
-    storage_uri="sqlite:///rate_limits.db",
+    storage_uri="memory://",
 )
 
 whisper_model: Whisper = whisper.load_model("base")
@@ -43,7 +43,7 @@ if logger.hasHandlers():
 logger.addHandler(file_handler)
 
 
-dotenv.load_dotenv()
+dotenv.load_dotenv(parent_path / ".env")
 api_secret_key: str | None = os.getenv("API_SECRET_KEY")
 
 if api_secret_key is None:
