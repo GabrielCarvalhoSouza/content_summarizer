@@ -55,7 +55,7 @@ def fetch_transcription(
             response: requests.Response = requests.post(
                 api_url,
                 files=files,
-                timeout=900,
+                timeout=1800,
                 headers={"X-Api-Key": api_key},
             )
         response.raise_for_status()

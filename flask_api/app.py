@@ -8,16 +8,16 @@ and return the full transcription result as a JSON object.
 import logging
 import os
 import tempfile
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
 
 import dotenv
-import whisper
+from faster_whisper import WhisperModel
+from faster_whisper.transcribe import Segment
 from flask import Flask, Response, jsonify, request
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.datastructures import FileStorage
-from whisper import Whisper
 
 app: Flask = Flask(__name__)
 limiter = Limiter(
@@ -26,7 +26,7 @@ limiter = Limiter(
     storage_uri="memory://",
 )
 
-whisper_model: Whisper = whisper.load_model("base")
+
 parent_path: Path = Path(__file__).parent
 logfile_path: Path = parent_path / "app.log"
 log_formatter = logging.Formatter(
@@ -49,6 +49,8 @@ api_secret_key: str | None = os.getenv("API_SECRET_KEY")
 if api_secret_key is None:
     logger.error("API_SECRET_KEY environment variable not set")
     raise ValueError("API_SECRET_KEY environment variable not set")
+
+whisper_model = WhisperModel("base", device="cpu", compute_type="int8")
 
 
 @app.route("/transcribe", methods=["POST"])
@@ -84,11 +86,11 @@ def transcribe() -> Response | tuple[Response, int]:
 
             logger.info("Initializing transcription")
 
-            transcription_result: dict[str, Any] = whisper_model.transcribe(
-                str(temp_path)
-            )
+            segments: Iterable[Segment]
+            segments, _ = whisper_model.transcribe(str(temp_path), beam_size=5)
+            transcription_text: str = "".join([segment.text for segment in segments])
+
             logger.info("Transcription completed")
-            transcription_text: str = transcription_result.get("text", "")
             return jsonify({"transcription": transcription_text})
 
     except Exception as e:

@@ -13,6 +13,7 @@ dependencies = [
     "requests",
     "colorlog>=6.9.0",
     "flask-limiter>=3.12",
+    "faster-whisper>=1.1.1",
 ]
 
 [project.optional-dependencies]

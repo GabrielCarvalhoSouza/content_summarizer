@@ -48,16 +48,15 @@ def main() -> None:
 
     user_language = lang_code
 
-    speed_factor: float = 1.5
+    speed_factor: float = 1.25
 
     genai.configure(api_key=api_key)
-    gemini_model: GenerativeModel = genai.GenerativeModel("models/gemini-2.0-flash")
+    gemini_model: GenerativeModel = genai.GenerativeModel("models/gemini-2.5-flash")
 
     youtube_service: YoutubeService = YoutubeService()
     cache_manager: CacheManager = CacheManager()
 
-    # url: str = "https://youtu.be/3pPiYzKaT-c?si=aq0xvMkz5N3ergx_"
-    url: str = "https://youtu.be/izLEqe3Mb-U?si=9UnttZxXkbmOjQYl"
+    url: str = "https://www.youtube.com/watch?v=7w-UlP35UVA"
 
     youtube_service.load_from_url(url)
 

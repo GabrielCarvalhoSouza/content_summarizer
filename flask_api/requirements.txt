@@ -1,5 +1,5 @@
 flask
-openai-whisper
+faster-whisper
 python-dotenv
 flask-limiter
 gunicorn
