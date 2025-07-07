@@ -1,6 +1,7 @@
 # Project
 /cache/
 uv.lock
+a.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

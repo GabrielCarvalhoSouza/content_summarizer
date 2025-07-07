@@ -122,9 +122,17 @@ class YoutubeService(BaseVideoService):
             logger.warning("No captions found for video")
             return None
 
-        priority_codes: list[str] = [user_language, "en"]
+        priority_codes = [user_language]
+        if "-" in user_language:
+            generic_language = user_language.split("-")[0]
+            if generic_language not in priority_codes:
+                priority_codes.append(generic_language)
+
+        if "en" not in priority_codes:
+            priority_codes.append("en")
+
         for code in priority_codes:
-            caption: Caption | None = self.yt.captions.get_by_language_code(code)
+            caption: Caption | None = self.yt.captions.get(code)
             if caption is not None and not caption.code.startswith("a."):
                 logger.info("Found manual caption in system language or English")
                 return caption.generate_txt_captions()

@@ -68,9 +68,8 @@ def generate_summary(
             """)  # noqa: E501
     try:
         res: GenerateContentResponse = gemini_model.generate_content(prompt)
-        string_res: str = str(res)
         logger.info("Summary generated successfully")
-        return string_res
+        return res.text
     except Exception as e:
         logger.exception("Failed to generate summary")
         raise SummaryError(f"Failed to generate summary: {e}") from e

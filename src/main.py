@@ -103,7 +103,7 @@ def setup() -> AppConfig:
         logger.warning("Failed to detect locale, using default: %s", DEFAULT_LOCALE)
         lang_code = DEFAULT_LOCALE
 
-    user_language = lang_code
+    user_language = lang_code.split(".")[0].replace("_", "-")
 
     speed_factor: float = 1.25
 
@@ -206,7 +206,10 @@ def run_application(url: str) -> None:
 
         if caption:
             config.logger.info("Manual caption found. Starting caption pipeline")
-            caption_pipeline(config, caption)
+            caption_pipeline(
+                config,
+                caption,
+            )
             return
         config.logger.info("No suitable caption found. Starting transcription pipeline")
         transcription_pipeline(config, url)
@@ -221,7 +224,7 @@ def run_application(url: str) -> None:
 
 def main() -> None:
     """Initiate the application."""
-    url: str = "https://www.youtube.com/watch?v=7w-UlP35UVA"
+    url: str = "https://youtu.be/y15070biffg?si=4i6IRg-qrqW-YOo4"
 
     try:
         run_application(url)
