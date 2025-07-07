@@ -47,9 +47,6 @@ class AudioProcessor:
 
         """
         _speed_factor = str(speed_factor)
-        if self._output_path.exists():
-            logger.info("Output audio file already exists, skipping audio acceleration")
-            return
         if not self._input_path.exists():
             logger.error("Input audio file does not exist")
             raise AudioProcessingError("Input audio file does not exist")

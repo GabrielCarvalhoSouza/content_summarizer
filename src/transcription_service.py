@@ -28,8 +28,8 @@ class TranscriptionError(Exception):
 
 
 def fetch_transcription(
-    api_url: str, transcription_file_path: Path, audio_file_path: Path, api_key: str
-) -> None:
+    api_url: str, audio_file_path: Path, api_key: str
+) -> str | None:
     """Fetch the transcription of an audio file from the Whisper API.
 
     The transcription is saved to a file specified by
@@ -45,10 +45,6 @@ def fetch_transcription(
         TranscriptionError: If there is an error during transcription.
 
     """
-    if transcription_file_path.exists():
-        logger.info("Transcription file already exists, skipping transcription")
-        return
-
     try:
         with audio_file_path.open("rb") as f:
             files: dict[str, IO[bytes]] = {"audio": f}
@@ -60,11 +56,9 @@ def fetch_transcription(
             )
         response.raise_for_status()
         transcription_text: str = response.json().get("transcription", "")
-
-        with transcription_file_path.open("w", encoding="utf-8") as f:
-            f.write(transcription_text)
-
         logger.info("Transcribed audio successfully")
+        return transcription_text
+
     except requests.exceptions.RequestException as e:
         logger.exception("Failed to transcribe audio")
         raise TranscriptionError(f"Failed to transcribe audio: {e}") from e

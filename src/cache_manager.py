@@ -20,20 +20,45 @@ logger = logging.getLogger(__name__)
 class CacheManager:
     """A class to manage cache files for the content summarizer."""
 
-    def create_cache(
-        self, video_metadata: VideoMetadata, metadata_file_path: Path
-    ) -> None:
-        """Create a cache file and a metadata file for the given video.
+    def _write_to_file(self, content: str, file_path: Path) -> None:
+        """Write content to a file.
 
         Args:
-            video_metadata (VideoMetadata): The metadata of the video.
-            metadata_file_path (Path): The path of the metadata file to be created.
+            content (str): The content to be written to the file.
+            file_path (Path): The path of the file to be created.
 
         """
-        metadata_file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            with file_path.open("w", encoding="utf-8") as f:
+                f.write(content)
 
+            logger.info("File saved successfully to %s", file_path)
+        except OSError:
+            logger.exception("Failed to save file")
+            raise
+
+    def save_metadata_file(
+        self, video_metadata: VideoMetadata, metadata_file_path: Path
+    ) -> None:
+        """Save a VideoMetadata object to a JSON file.
+
+        Args:
+            video_metadata (VideoMetadata): The VideoMetadata object to be saved.
+            metadata_file_path (Path): The path of the JSON file to be created.
+
+        """
         video_metadata_dict = asdict(video_metadata)
-        with metadata_file_path.open("w", encoding="utf-8") as f:
-            json.dump(video_metadata_dict, f, ensure_ascii=False, indent=4)
+        json_content = json.dumps(video_metadata_dict, indent=4)
 
-        logger.info("Cache and metadata files created successfully")
+        self._write_to_file(json_content, metadata_file_path)
+
+    def save_text_file(self, text: str, text_file_path: Path) -> None:
+        """Save a text string to a file.
+
+        Args:
+            text (str): The text to be saved.
+            text_file_path (Path): The path of the file to be created.
+
+        """
+        self._write_to_file(text, text_file_path)

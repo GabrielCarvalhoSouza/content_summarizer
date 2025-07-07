@@ -126,6 +126,16 @@ class PathManager:
         return self.video_dir_path / "transcription.txt"
 
     @property
+    def caption_file_path(self) -> Path:
+        """Get the path of the caption file.
+
+        Returns:
+            Path: The path of the caption file.
+
+        """
+        return self.video_dir_path / "caption.txt"
+
+    @property
     def summary_file_path(self) -> Path:
         """Get the path of the summary file.
 

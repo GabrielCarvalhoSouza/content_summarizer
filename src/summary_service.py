@@ -32,8 +32,7 @@ def generate_summary(
     gemini_model: GenerativeModel,
     user_language: str,
     transcription_file_path: Path,
-    resume_file_path: Path,
-) -> None:
+) -> str | None:
     """Generate a summary from a transcription file using a generative AI model.
 
     Args:
@@ -69,9 +68,9 @@ def generate_summary(
             """)  # noqa: E501
     try:
         res: GenerateContentResponse = gemini_model.generate_content(prompt)
-        with resume_file_path.open("w", encoding="utf-8") as f:
-            f.write(res.text)
+        string_res: str = str(res)
         logger.info("Summary generated successfully")
+        return string_res
     except Exception as e:
         logger.exception("Failed to generate summary")
         raise SummaryError(f"Failed to generate summary: {e}") from e

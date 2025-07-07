@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Self
 
 from pytubefix import Stream, YouTube
+from pytubefix.captions import Caption
 from pytubefix.cli import on_progress
 
 from .video_service_interface import BaseVideoService
@@ -84,9 +85,6 @@ class YoutubeService(BaseVideoService):
             DownloadError: If there is an error downloading the audio.
 
         """
-        if audio_file_path.exists():
-            logger.info("Audio file already exists, skipping download")
-            return
         output_path: Path = audio_file_path.parent
         filename: str = audio_file_path.name
         try:
@@ -103,3 +101,37 @@ class YoutubeService(BaseVideoService):
                 self.title,
             )
             raise DownloadError(f"Failed to download audio: {e}") from e
+
+    def find_best_captions(self, user_language: str) -> str | None:
+        """Find the best captions for a given user language.
+
+        Searches for the best available manual caption based on a priority list and
+        returns its clean text. The search hierarchy is: system language,
+        English, then the first other manual caption available.
+
+        Args:
+            user_language (str): The user's language preference in ISO 639-1
+                format.
+
+        Returns:
+            str | None: The best captions for the user in text format, or None if
+                no captions are found.
+
+        """
+        if not self.yt.captions:
+            logger.warning("No captions found for video")
+            return None
+
+        priority_codes: list[str] = [user_language, "en"]
+        for code in priority_codes:
+            caption: Caption | None = self.yt.captions.get_by_language_code(code)
+            if caption is not None and not caption.code.startswith("a."):
+                logger.info("Found manual caption in system language or English")
+                return caption.generate_txt_captions()
+
+        for caption in self.yt.captions:
+            if not caption.code.startswith("a."):
+                logger.info("Found manual caption in any language")
+                return caption.generate_txt_captions()
+        logger.warning("No captions found for video")
+        return None

@@ -127,12 +127,23 @@ def setup() -> AppConfig:
     )
 
 
+def caption_pipeline(config: AppConfig, caption: str) -> None:
+    """Execute the caption pipeline for a given URL."""
+    config.cache_manager.save_text_file(caption, config.path_manager.caption_file_path)
+    summary = generate_summary(
+        config.gemini_model,
+        config.user_language,
+        config.path_manager.caption_file_path,
+    )
+
+    if summary:
+        config.cache_manager.save_text_file(
+            summary, config.path_manager.summary_file_path
+        )
+
+
 def transcription_pipeline(config: AppConfig, url: str) -> None:
     """Execute the transcription pipeline for a given URL."""
-    config.youtube_service.load_from_url(url)
-
-    config.path_manager.set_video_id(config.youtube_service.video_id)
-
     accelerated_audio_path: Path = config.path_manager.get_accelerated_audio_path(
         config.speed_factor
     )
@@ -147,28 +158,38 @@ def transcription_pipeline(config: AppConfig, url: str) -> None:
         author=config.youtube_service.author,
     )
 
-    config.cache_manager.create_cache(
+    config.cache_manager.save_metadata_file(
         video_metadata,
         config.path_manager.metadata_file_path,
     )
 
-    config.youtube_service.audio_download(config.path_manager.audio_file_path)
+    if not config.path_manager.audio_file_path.exists():
+        config.youtube_service.audio_download(config.path_manager.audio_file_path)
 
-    audio_processor.accelerate_audio(config.speed_factor)
+    if not accelerated_audio_path.exists():
+        audio_processor.accelerate_audio(config.speed_factor)
 
-    fetch_transcription(
-        config.api_url,
-        config.path_manager.transcription_file_path,
-        accelerated_audio_path,
-        config.transcription_api_key,
-    )
+    if not config.path_manager.transcription_file_path.exists():
+        transcription = fetch_transcription(
+            config.api_url,
+            accelerated_audio_path,
+            config.transcription_api_key,
+        )
+        if transcription:
+            config.cache_manager.save_text_file(
+                transcription, config.path_manager.transcription_file_path
+            )
 
-    generate_summary(
+    summary = generate_summary(
         config.gemini_model,
         config.user_language,
         config.path_manager.transcription_file_path,
-        config.path_manager.summary_file_path,
     )
+
+    if summary:
+        config.cache_manager.save_text_file(
+            summary, config.path_manager.summary_file_path
+        )
 
 
 def run_application(url: str) -> None:
@@ -176,8 +197,20 @@ def run_application(url: str) -> None:
     config: AppConfig | None = None
     try:
         config = setup()
+        config.youtube_service.load_from_url(url)
+        config.path_manager.set_video_id(config.youtube_service.video_id)
+
+        caption: str | None = config.youtube_service.find_best_captions(
+            config.user_language
+        )
+
+        if caption:
+            config.logger.info("Manual caption found. Starting caption pipeline")
+            caption_pipeline(config, caption)
+            return
+        config.logger.info("No suitable caption found. Starting transcription pipeline")
         transcription_pipeline(config, url)
-        config.logger.info("Program completed successfully")
+
     except Exception as e:
         if config:
             config.logger.exception("An error occurred during the pipeline")
@@ -192,6 +225,7 @@ def main() -> None:
 
     try:
         run_application(url)
+        logging.info("Application completed successfully.")
     except Exception:
         logging.critical("Fatal error occurred. Exiting application.")
         sys.exit(1)
