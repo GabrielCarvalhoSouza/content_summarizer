@@ -1,16 +1,4 @@
-"""Generate a summary from a transcription file using a generative AI model.
-
-This module provides a function to generate a summary from a transcription file using
-a generative AI model.
-
-Classes:
-    SummaryError: Custom exception for errors during summary generation.
-
-Functions:
-    generate_summary: Generate a summary from a transcription file using a generative
-        AI model.
-
-"""
+"""Provides a function to generate a summary from text using the Gemini API."""
 
 import logging
 import textwrap
@@ -32,19 +20,23 @@ def generate_summary(
     gemini_model: GenerativeModel,
     user_language: str,
     transcription_file_path: Path,
-) -> str | None:
-    """Generate a summary from a transcription file using a generative AI model.
+) -> str:
+    """Read a transcription file and generates a summary using the Gemini model.
+
+    This function validates the input file, constructs a prompt, calls the
+    Gemini API, and returns the generated summary text in memory.
 
     Args:
-        gemini_model (GenerativeModel): The generative AI model to use for summary
-            generation.
-        user_language (str): The language in which the summary should be generated.
-        transcription_file_path (Path): The path to the transcription file.
-        resume_file_path (Path): The path where the generated summary will be saved.
+        gemini_model (GenerativeModel): The initialized Gemini model instance.
+        user_language (str): The target language for the summary.
+        transcription_file_path (Path): The path to the text file containing the
+                                        transcription or caption.
+
+    Returns:
+        str: The generated summary text.
 
     Raises:
-        FileNotFoundError: If the transcription file does not exist.
-        SummaryError: If an error occurs during the generation of the summary.
+        SummaryError: If the input file is not found or the API call fails.
 
     """
     if not transcription_file_path.exists():

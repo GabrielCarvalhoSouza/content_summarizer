@@ -1,15 +1,4 @@
-"""Generate a transcription from an audio file using a speech-to-text model.
-
-This module provides a function to generate a transcription from an audio file using a
-speech-to-text model.
-
-Classes:
-    TranscriptionError: Custom exception for errors during transcription.
-
-Functions:
-    fetch_transcription: Fetch a transcription from an audio file using a
-        speech-to-text model.
-"""
+"""Provides a function to interact with the transcription API service."""
 
 import json
 import logging
@@ -27,22 +16,22 @@ class TranscriptionError(Exception):
     pass
 
 
-def fetch_transcription(
-    api_url: str, audio_file_path: Path, api_key: str
-) -> str | None:
-    """Fetch the transcription of an audio file from the Whisper API.
+def fetch_transcription(api_url: str, audio_file_path: Path, api_key: str) -> str:
+    """Send an audio file to the transcription API and returns the transcribed text.
 
-    The transcription is saved to a file specified by
-    `transcription_file_path`.
+    This function handles the API request and error handling, returning the
+    transcription text in memory. It does not handle caching or file saving.
 
     Args:
-        api_url (str): The URL of the Whisper API.
-        transcription_file_path (Path): The path to the transcription file.
-        audio_file_path (Path): The path to the audio file.
-        api_key (str): The API key to use for authentication.
+        api_url (str): The URL of the transcription API endpoint.
+        audio_file_path (Path): The path to the audio file to be transcribed.
+        api_key (str): The API key for authentication.
+
+    Returns:
+        str: The transcribed text returned by the API.
 
     Raises:
-        TranscriptionError: If there is an error during transcription.
+        TranscriptionError: If the API request fails or returns an error.
 
     """
     try:

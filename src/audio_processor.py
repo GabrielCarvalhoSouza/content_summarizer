@@ -1,13 +1,4 @@
-"""Audio processor module.
-
-This module provides a class to process audio files using FFmpeg.
-
-Classes:
-    AudioProcessor: A class to process audio files using FFmpeg.
-    AudioProcessingError: An exception raised when there is an error during audio
-        processing.
-
-"""
+"""Handles audio processing tasks, such as acceleration, using FFmpeg."""
 
 import logging
 import shutil
@@ -22,7 +13,13 @@ class AudioProcessingError(Exception):
 
 
 class AudioProcessor:
-    """A class to process audio files using FFmpeg."""
+    """A class to process audio files.
+
+    Args:
+        input_path (Path): The path to the source audio file.
+        output_path (Path): The path where the processed audio file will be saved.
+
+    """
 
     def __init__(self, input_path: Path, output_path: Path) -> None:
         """Initialize the AudioProcessor.
@@ -36,14 +33,17 @@ class AudioProcessor:
         self._output_path = output_path
 
     def accelerate_audio(self, speed_factor: float) -> None:
-        """Accelerate audio by a given speed factor using FFmpeg.
+        """Accelerates the audio file by a given factor using FFmpeg.
+
+        This method overwrites the output file if it already exists.
+        It relies on the calling pipeline to manage caching.
 
         Args:
-            speed_factor (float): The speed factor to accelerate the audio by.
+            speed_factor (float): The factor by which to accelerate the audio.
 
         Raises:
-            AudioProcessingError: If there is an error during audio processing.
-            FileNotFoundError: If FFmpeg is not found.
+            AudioProcessingError: If the input file is not found or if the
+                                  FFmpeg command fails.
 
         """
         _speed_factor = str(speed_factor)
@@ -52,10 +52,11 @@ class AudioProcessor:
             raise AudioProcessingError("Input audio file does not exist")
         if _speed_factor == "1.0":
             shutil.copy(self._input_path, self._output_path)
-            logger.info("Speed factor is 1.0, skipping audio acceleration")
+            logger.warning("Speed factor is 1.0, skipping audio acceleration")
             return
         ffmpeg = [
             "ffmpeg",
+            "-y",
             "-i",
             str(self._input_path),
             "-filter:a",

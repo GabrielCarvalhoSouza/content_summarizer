@@ -1,9 +1,6 @@
-"""Custom YouTube service configuration.
+"""Provides a service to interact with YouTube.
 
-This module provides a custom YouTube service configuration for the content summarizer.
-
-Classes:
-    YoutubeService: A service that downloads audio from YouTube.
+Handles video loading, data extraction, and caption fetching.
 """
 
 import logging
@@ -24,9 +21,10 @@ class DownloadError(Exception):
 
 
 class YoutubeService(BaseVideoService):
-    """A service that downloads audio from YouTube.
+    """A service to download audio and fetch captions from YouTube.
 
-    This class provides a method to download audio from YouTube by providing a URL.
+    This class provides methods to load a YouTube video, download its audio
+    stream, and find the best available manual caption.
     """
 
     def __init__(self) -> None:
@@ -76,13 +74,16 @@ class YoutubeService(BaseVideoService):
         return self.yt.author
 
     def audio_download(self, audio_file_path: Path) -> None:
-        """Download the audio file of the video.
+        """Download the highest quality audio-only stream to the specified path.
+
+        Note: This method does not check for existing files. The calling
+        pipeline is responsible for cache management.
 
         Args:
-            audio_file_path (Path): The path of the audio file to be downloaded.
+            audio_file_path (Path): The full path where the audio file will be saved.
 
         Raises:
-            DownloadError: If there is an error downloading the audio.
+            DownloadError: If the audio stream is not found or if the download fails.
 
         """
         output_path: Path = audio_file_path.parent
@@ -103,19 +104,22 @@ class YoutubeService(BaseVideoService):
             raise DownloadError(f"Failed to download audio: {e}") from e
 
     def find_best_captions(self, user_language: str) -> str | None:
-        """Find the best captions for a given user language.
+        """Find the best available manual caption and returns its clean text.
 
-        Searches for the best available manual caption based on a priority list and
-        returns its clean text. The search hierarchy is: system language,
-        English, then the first other manual caption available.
+        The search follows a specific hierarchy to ensure the best quality:
+        1.  The user's specific language (e.g., 'pt-BR').
+        2.  The user's generic language (e.g., 'pt').
+        3.  English ('en') as a universal fallback.
+        4.  Any other available manual caption as a last resort.
+
+        Auto-generated captions are always ignored.
 
         Args:
-            user_language (str): The user's language preference in ISO 639-1
-                format.
+            user_language (str): The user's preferred language code (e.g., 'pt-BR').
 
         Returns:
-            str | None: The best captions for the user in text format, or None if
-                no captions are found.
+            str | None: The clean caption text if a manual caption is found,
+                        otherwise None.
 
         """
         if not self.yt.captions:
@@ -139,7 +143,7 @@ class YoutubeService(BaseVideoService):
 
         for caption in self.yt.captions:
             if not caption.code.startswith("a."):
-                logger.info("Found manual caption in any language")
+                logger.warning("Found manual caption in any language")
                 return caption.generate_txt_captions()
         logger.warning("No captions found for video")
         return None

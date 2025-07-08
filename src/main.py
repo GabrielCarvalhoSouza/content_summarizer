@@ -1,21 +1,4 @@
-"""Main entry point for the content summarizer.
-
-This module provides the main entry point for the content summarizer.
-
-Functions:
-    main: The main entry point for the content summarizer.
-
-Classes:
-    AppConfig: A data class for the application configuration.
-    SetupError: An exception raised for errors in the setup process.
-    PipelineError: An exception raised for errors during the pipeline execution.
-
-Functions:
-    setup: Set up the application configuration and environment variables.
-    transcription_pipeline: The main pipeline for the content summarizer.
-    run_application: Run the application with the provided URL.
-    main: The main entry point for the content summarizer.
-"""
+"""Main entry point and orchestrator for the Content Summarizer."""
 
 import locale
 import logging
@@ -54,7 +37,11 @@ class PipelineError(Exception):
 
 @dataclass
 class AppConfig:
-    """Configuration data class for the application."""
+    """Holds all shared application configurations and service instances.
+
+    This dataclass acts as a dependency injection container, making it easy to
+    pass all necessary services and settings throughout the application.
+    """
 
     logger: logging.Logger
     path_manager: PathManager
@@ -69,7 +56,19 @@ class AppConfig:
 
 
 def setup() -> AppConfig:
-    """Set up the application configuration and environment variables."""
+    """Initialize all services, configurations, and dependencies.
+
+    This function sets up logging, loads environment variables from a .env file,
+    normalizes the user's system locale to a web-compatible format, and
+    instantiates all necessary service classes.
+
+    Returns:
+        AppConfig: A populated dataclass instance with all dependencies.
+
+    Raises:
+        ValueError: If a required environment variable is not set.
+
+    """
     setup_logging()
     logger = logging.getLogger(__name__)
 
@@ -128,7 +127,17 @@ def setup() -> AppConfig:
 
 
 def caption_pipeline(config: AppConfig, caption: str) -> None:
-    """Execute the caption pipeline for a given URL."""
+    """Execute the caption-based summary pipeline.
+
+    This is the "fast path" workflow. It takes the pre-existing caption text,
+    delegates saving it to the CacheManager, generates a summary from that
+    file, and finally saves the summary.
+
+    Args:
+        config (AppConfig): The application configuration object.
+        caption (str): The clean caption text to be processed.
+
+    """
     config.cache_manager.save_text_file(caption, config.path_manager.caption_file_path)
     summary = generate_summary(
         config.gemini_model,
@@ -143,7 +152,17 @@ def caption_pipeline(config: AppConfig, caption: str) -> None:
 
 
 def transcription_pipeline(config: AppConfig, url: str) -> None:
-    """Execute the transcription pipeline for a given URL."""
+    """Execute the full transcription-based summary pipeline.
+
+    This is the "slow path" workflow, used when no suitable captions are found.
+    It orchestrates all necessary steps: audio download, acceleration,
+    transcription via API, caching, and final summary generation.
+
+    Args:
+        config (AppConfig): The application configuration object.
+        url (str): The URL of the YouTube video (passed for context, though unused).
+
+    """
     accelerated_audio_path: Path = config.path_manager.get_accelerated_audio_path(
         config.speed_factor
     )
@@ -163,10 +182,9 @@ def transcription_pipeline(config: AppConfig, url: str) -> None:
             accelerated_audio_path,
             config.transcription_api_key,
         )
-        if transcription:
-            config.cache_manager.save_text_file(
-                transcription, config.path_manager.transcription_file_path
-            )
+        config.cache_manager.save_text_file(
+            transcription, config.path_manager.transcription_file_path
+        )
 
     summary = generate_summary(
         config.gemini_model,
@@ -174,14 +192,25 @@ def transcription_pipeline(config: AppConfig, url: str) -> None:
         config.path_manager.transcription_file_path,
     )
 
-    if summary:
-        config.cache_manager.save_text_file(
-            summary, config.path_manager.summary_file_path
-        )
+    config.cache_manager.save_text_file(summary, config.path_manager.summary_file_path)
 
 
 def run_application(url: str) -> None:
-    """Run the application with the provided URL."""
+    """Run the main application logic, acting as a dispatcher.
+
+    This function initializes the configuration, loads video information,
+    and then decides which pipeline to run (`caption_pipeline` or
+    `transcription_pipeline`) based on the availability of manual captions.
+    It contains the primary error handling for the application's workflow.
+
+    Args:
+        url (str): The YouTube URL to be processed.
+
+    Raises:
+        PipelineError: If an error occurs during the execution of a pipeline.
+        SetupError: If an error occurs during the initial setup.
+
+    """
     config: AppConfig | None = None
     try:
         config = setup()
@@ -221,7 +250,12 @@ def run_application(url: str) -> None:
 
 
 def main() -> None:
-    """Initiate the application."""
+    """Entry point for the application script.
+
+    This function calls the core application logic and acts as the final
+    safety net, catching any fatal exceptions, logging them, and setting the
+    appropriate system exit code.
+    """
     url: str = "https://youtu.be/y15070biffg?si=4i6IRg-qrqW-YOo4"
 
     try:
