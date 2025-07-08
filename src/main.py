@@ -151,18 +151,6 @@ def transcription_pipeline(config: AppConfig, url: str) -> None:
         config.path_manager.audio_file_path, accelerated_audio_path
     )
 
-    video_metadata: VideoMetadata = VideoMetadata(
-        id=config.youtube_service.video_id,
-        url=url,
-        title=config.youtube_service.title,
-        author=config.youtube_service.author,
-    )
-
-    config.cache_manager.save_metadata_file(
-        video_metadata,
-        config.path_manager.metadata_file_path,
-    )
-
     if not config.path_manager.audio_file_path.exists():
         config.youtube_service.audio_download(config.path_manager.audio_file_path)
 
@@ -204,13 +192,23 @@ def run_application(url: str) -> None:
             config.user_language
         )
 
+        video_metadata: VideoMetadata = VideoMetadata(
+            id=config.youtube_service.video_id,
+            url=url,
+            title=config.youtube_service.title,
+            author=config.youtube_service.author,
+        )
+
+        config.cache_manager.save_metadata_file(
+            video_metadata,
+            config.path_manager.metadata_file_path,
+        )
+
         if caption:
             config.logger.info("Manual caption found. Starting caption pipeline")
-            caption_pipeline(
-                config,
-                caption,
-            )
+            caption_pipeline(config, caption)
             return
+
         config.logger.info("No suitable caption found. Starting transcription pipeline")
         transcription_pipeline(config, url)
 
