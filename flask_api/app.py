@@ -29,10 +29,12 @@ limiter = Limiter(
 
 parent_path: Path = Path(__file__).parent
 logfile_path: Path = parent_path / "app.log"
-log_formatter = logging.Formatter(
+log_formatter: logging.Formatter = logging.Formatter(
     "%(asctime)s - %(levelname)s - [%(name)s:%(lineno)d] - %(message)s"
 )
-file_handler = logging.FileHandler(logfile_path, mode="a", encoding="utf-8")
+file_handler: logging.FileHandler = logging.FileHandler(
+    logfile_path, mode="a", encoding="utf-8"
+)
 file_handler.setFormatter(log_formatter)
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -88,14 +90,16 @@ def transcribe() -> Response | tuple[Response, int]:
 
             segments: Iterable[Segment]
             segments, _ = whisper_model.transcribe(str(temp_path), beam_size=5)
-            transcription_text: str = "".join([segment.text for segment in segments])
+            transcription_text: str = "".join(segment.text for segment in segments)
 
             logger.info("Transcription completed")
             return jsonify({"transcription": transcription_text})
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error occurred during transcription")
-        return jsonify({"error": str(e)}), 500
+        return jsonify(
+            {"error": "An internal error occurred during transcription."}
+        ), 500
 
 
 if __name__ == "__main__":
