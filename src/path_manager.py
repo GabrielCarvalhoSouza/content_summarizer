@@ -154,3 +154,13 @@ class PathManager:
 
         """
         return self.video_dir_path / "metadata.json"
+
+    @property
+    def log_file_path(self) -> Path:
+        """Get the path of the log file.
+
+        Returns:
+            Path: The path of the log file.
+
+        """
+        return self.root_path / "log.log"

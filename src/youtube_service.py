@@ -9,7 +9,6 @@ from typing import Self
 
 from pytubefix import Stream, YouTube
 from pytubefix.captions import Caption
-from pytubefix.cli import on_progress
 
 from .video_service_interface import BaseVideoService
 
@@ -41,7 +40,7 @@ class YoutubeService(BaseVideoService):
             Self: The instance of the YouTube service.
 
         """
-        self._yt = YouTube(source_url, on_progress_callback=on_progress)
+        self._yt = YouTube(source_url)
         logger.info("Loaded video: %s from URL: %s", self.title, source_url)
         return self
 

@@ -69,10 +69,10 @@ def setup() -> AppConfig:
         ValueError: If a required environment variable is not set.
 
     """
-    setup_logging()
-    logger = logging.getLogger(__name__)
-
     path_manager: PathManager = PathManager()
+
+    setup_logging(path_manager.log_file_path)
+    logger = logging.getLogger(__name__)
 
     load_dotenv(path_manager.parent_path / ".env")
     api_key: str | None = os.getenv("GEMINI_API_KEY")
@@ -192,7 +192,10 @@ def transcription_pipeline(config: AppConfig, url: str) -> None:
         config.path_manager.transcription_file_path,
     )
 
-    config.cache_manager.save_text_file(summary, config.path_manager.summary_file_path)
+    if summary:
+        config.cache_manager.save_text_file(
+            summary, config.path_manager.summary_file_path
+        )
 
 
 def run_application(url: str) -> None:
@@ -256,7 +259,7 @@ def main() -> None:
     safety net, catching any fatal exceptions, logging them, and setting the
     appropriate system exit code.
     """
-    url: str = "https://youtu.be/y15070biffg?si=4i6IRg-qrqW-YOo4"
+    url: str = "https://youtu.be/PGLo14y3mV4?si=lubZJWw4G6_7Fw3g"
 
     try:
         run_application(url)

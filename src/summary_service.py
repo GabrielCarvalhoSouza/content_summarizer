@@ -20,7 +20,7 @@ def generate_summary(
     gemini_model: GenerativeModel,
     user_language: str,
     transcription_file_path: Path,
-) -> str:
+) -> str | None:
     """Read a transcription file and generates a summary using the Gemini model.
 
     This function validates the input file, constructs a prompt, calls the
