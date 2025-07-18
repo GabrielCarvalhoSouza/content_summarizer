@@ -11,6 +11,11 @@ import logging
 from pathlib import Path
 from typing import Self
 
+from platformdirs import user_cache_path, user_config_path
+
+app_name = "content-summarizer"
+app_author = "CorvoCS08"
+
 logger = logging.getLogger(__name__)
 
 
@@ -86,16 +91,6 @@ class PathManager:
         return self.parent_path.parent
 
     @property
-    def cache_dir_path(self) -> Path:
-        """Get the path of the cache directory.
-
-        Returns:
-            Path: The path of the cache directory.
-
-        """
-        return self.root_path / "cache"
-
-    @property
     def video_dir_path(self) -> Path:
         """Get the path of the directory for the video.
 
@@ -164,3 +159,23 @@ class PathManager:
 
         """
         return self.root_path / "log.log"
+
+    @property
+    def config_dir_path(self) -> Path:
+        """Get the path of the config directory.
+
+        Returns:
+            Path: The path of the config directory.
+
+        """
+        return user_config_path(app_name, app_author)
+
+    @property
+    def cache_dir_path(self) -> Path:
+        """Get the path of the cache directory.
+
+        Returns:
+            Path: The path of the cache directory.
+
+        """
+        return user_cache_path(app_name, app_author)
