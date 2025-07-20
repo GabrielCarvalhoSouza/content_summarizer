@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .data_models import VideoMetadata
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class CacheManager:

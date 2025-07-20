@@ -12,7 +12,7 @@ from pytubefix.captions import Caption
 
 from .video_service_interface import BaseVideoService
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class DownloadError(Exception):

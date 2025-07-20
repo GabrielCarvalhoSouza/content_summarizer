@@ -21,7 +21,7 @@ WHISPER_MODEL_LIST = [
 ]
 
 
-def parse_arguments(cache_dir_path: Path) -> argparse.Namespace:
+def parse_arguments() -> argparse.Namespace:
     """Set up the argument parser and parses the command-line arguments.
 
     This function builds the entire CLI structure, including the main parser and
@@ -59,7 +59,6 @@ def parse_arguments(cache_dir_path: Path) -> argparse.Namespace:
         "-o",
         "--output",
         type=Path,
-        default=cache_dir_path,
         help="The output directory.",
     )
 

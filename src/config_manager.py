@@ -5,21 +5,21 @@ import logging
 from pathlib import Path
 from typing import Any
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class ConfigManager:
     """Handles reading and writing the user's configuration file."""
 
-    def __init__(self, config_dir_path: Path) -> None:
+    def __init__(self, config_file_path: Path) -> None:
         """Initialize the ConfigManager.
 
         Args:
-            config_dir_path (Path): The path to the directory where the
+            config_file_path (Path): The path to the directory where the
                                     configuration file is stored.
 
         """
-        self._config_file = config_dir_path / "config.json"
+        self._config_file = config_file_path
 
     def load_config(self) -> dict[str, Any]:
         """Load configurations from the config.json file.

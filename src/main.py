@@ -1,11 +1,13 @@
 """Main entry point and orchestrator for the Content Summarizer."""
 
+import argparse
 import locale
 import logging
 import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import google.generativeai as genai
 from dotenv import load_dotenv
@@ -13,6 +15,8 @@ from google.generativeai.generative_models import GenerativeModel
 
 from .audio_processor import AudioProcessor
 from .cache_manager import CacheManager
+from .cli import parse_arguments
+from .config_manager import ConfigManager
 from .data_models import VideoMetadata
 from .logger_config import setup_logging
 from .path_manager import PathManager
@@ -45,17 +49,25 @@ class AppConfig:
 
     logger: logging.Logger
     path_manager: PathManager
-    api_key: str
-    api_url: str
-    transcription_api_key: str
-    user_language: str
-    speed_factor: float
     youtube_service: YoutubeService
     cache_manager: CacheManager
     gemini_model: GenerativeModel
+    url: str | None
+    output_path: Path
+    keep_cache: bool
+    log_level: int
+    speed_factor: float
+    use_api: bool
+    api_url: str | None
+    api_key: str | None
+    gemini_key: str | None
+    gemini_model_name: str
+    whisper_model: str
+    beam_size: int
+    user_language: str
 
 
-def setup() -> AppConfig:
+def setup(args: argparse.Namespace) -> AppConfig:
     """Initialize all services, configurations, and dependencies.
 
     This function sets up logging, loads environment variables from a .env file,
@@ -72,20 +84,20 @@ def setup() -> AppConfig:
     path_manager: PathManager = PathManager()
 
     setup_logging(path_manager.log_file_path)
-    logger = logging.getLogger(__name__)
+    logger: logging.Logger = logging.getLogger(__name__)
 
     load_dotenv(path_manager.parent_path / ".env")
-    api_key: str | None = os.getenv("GEMINI_API_KEY")
+    gemini_key: str | None = os.getenv("GEMINI_API_KEY")
     api_url: str | None = os.getenv("API_URL")
-    transcription_api_key: str | None = os.getenv("TRANSCRIPTION_API_KEY")
+    api_key: str | None = os.getenv("TRANSCRIPTION_API_KEY")
 
-    if api_key is None:
+    if gemini_key is None:
         logger.error("GEMINI_API_KEY environment variable not set")
         raise ValueError("GEMINI_API_KEY environment variable not set")
     if api_url is None:
         logger.error("API_URL environment variable not set")
         raise ValueError("API_URL environment variable not set")
-    if transcription_api_key is None:
+    if api_key is None:
         logger.error("TRANSCRIPTION_API_KEY environment variable not set")
         raise ValueError("TRANSCRIPTION_API_KEY environment variable not set")
 
@@ -109,20 +121,28 @@ def setup() -> AppConfig:
     youtube_service: YoutubeService = YoutubeService()
     cache_manager: CacheManager = CacheManager()
 
-    genai.configure(api_key=api_key)
+    genai.configure(api_key=gemini_key)
     gemini_model: GenerativeModel = genai.GenerativeModel("models/gemini-2.5-flash")
 
     return AppConfig(
-        logger=logger,
-        path_manager=path_manager,
-        api_key=api_key,
-        api_url=api_url,
-        transcription_api_key=transcription_api_key,
-        user_language=user_language,
-        speed_factor=speed_factor,
-        youtube_service=youtube_service,
-        cache_manager=cache_manager,
-        gemini_model=gemini_model,
+        logger,
+        path_manager,
+        youtube_service,
+        cache_manager,
+        gemini_model,
+        args.url,
+        args.output_path,
+        args.keep_cache,
+        args.log_level,
+        speed_factor,
+        args.use_api,
+        api_url,
+        api_key,
+        gemini_key,
+        args.gemini_model_name,
+        args.whisper_model,
+        args.beam_size,
+        user_language,
     )
 
 
@@ -180,7 +200,7 @@ def transcription_pipeline(config: AppConfig, url: str) -> None:
         transcription = fetch_transcription(
             config.api_url,
             accelerated_audio_path,
-            config.transcription_api_key,
+            config.api_key,
         )
         config.cache_manager.save_text_file(
             transcription, config.path_manager.transcription_file_path
@@ -198,7 +218,7 @@ def transcription_pipeline(config: AppConfig, url: str) -> None:
         )
 
 
-def run_application(url: str) -> None:
+def run_application(args: argparse.Namespace) -> None:
     """Run the main application logic, acting as a dispatcher.
 
     This function initializes the configuration, loads video information,
@@ -216,8 +236,8 @@ def run_application(url: str) -> None:
     """
     config: AppConfig | None = None
     try:
-        config = setup()
-        config.youtube_service.load_from_url(url)
+        config = setup(args)
+        config.youtube_service.load_from_url(config.url)
         config.path_manager.set_video_id(config.youtube_service.video_id)
 
         caption: str | None = config.youtube_service.find_best_captions(
@@ -226,7 +246,7 @@ def run_application(url: str) -> None:
 
         video_metadata: VideoMetadata = VideoMetadata(
             id=config.youtube_service.video_id,
-            url=url,
+            url=config.url,
             title=config.youtube_service.title,
             author=config.youtube_service.author,
         )
@@ -252,6 +272,33 @@ def run_application(url: str) -> None:
         raise SetupError(f"An error occurred during the setup: {e}") from e
 
 
+def handle_config_command(args: argparse.Namespace) -> None:
+    path_manager: PathManager = PathManager()
+    config_manager: ConfigManager = ConfigManager(path_manager.config_file_path)
+    setup_logging(path_manager.log_file_path)
+    logger: logging.Logger = logging.getLogger(__name__)
+
+    try:
+        current_configs: dict[str, Any] = config_manager.load_config()
+        dict_args: dict[str, Any] = vars(args)
+
+        for key, value in dict_args.items():
+            if value is None:
+                continue
+            if key == "command":
+                continue
+            if key == "output":
+                current_configs["output_path"] = str(value)
+                continue
+            current_configs[key] = value
+
+        config_manager.save_config(current_configs)
+        logger.info("Configuration saved successfully.")
+    except OSError:
+        logger.exception("Failed to save configuration.")
+        raise
+
+
 def main() -> None:
     """Entry point for the application script.
 
@@ -259,10 +306,12 @@ def main() -> None:
     safety net, catching any fatal exceptions, logging them, and setting the
     appropriate system exit code.
     """
-    url: str = "https://youtu.be/PGLo14y3mV4?si=lubZJWw4G6_7Fw3g"
-
+    args = parse_arguments()
     try:
-        run_application(url)
+        if args.command == "config":
+            handle_config_command(args)
+            return
+        run_application(args)
         logging.info("Application completed successfully.")
     except Exception:
         logging.critical("Fatal error occurred. Exiting application.")

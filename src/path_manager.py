@@ -11,7 +11,7 @@ import logging
 from pathlib import Path
 from typing import Self
 
-from platformdirs import user_cache_path, user_config_path
+from platformdirs import user_cache_path, user_config_path, user_data_path
 
 app_name = "content-summarizer"
 app_author = "CorvoCS08"
@@ -158,17 +158,17 @@ class PathManager:
             Path: The path of the log file.
 
         """
-        return self.root_path / "log.log"
+        return user_data_path(app_name, app_author) / "log.log"
 
     @property
-    def config_dir_path(self) -> Path:
+    def config_file_path(self) -> Path:
         """Get the path of the config directory.
 
         Returns:
             Path: The path of the config directory.
 
         """
-        return user_config_path(app_name, app_author)
+        return user_config_path(app_name, app_author) / "config.json"
 
     @property
     def cache_dir_path(self) -> Path:
