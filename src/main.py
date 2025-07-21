@@ -51,13 +51,14 @@ class AppConfig:
     path_manager: PathManager
     youtube_service: YoutubeService
     cache_manager: CacheManager
+    config_manager: ConfigManager
     gemini_model: GenerativeModel
-    url: str | None
+    url: str
     output_path: Path
     keep_cache: bool
-    log_level: int
+    quiet: int
     speed_factor: float
-    use_api: bool
+    api: bool
     api_url: str | None
     api_key: str | None
     gemini_key: str | None
@@ -65,6 +66,83 @@ class AppConfig:
     whisper_model: str
     beam_size: int
     user_language: str
+
+
+def _resolve_config(
+    args: argparse.Namespace, path_manager: PathManager, config_manager: ConfigManager
+) -> dict[str, Any]:
+    final_config: dict[str, Any] = {
+        "output_path": path_manager.cache_dir_path,
+        "keep_cache": False,
+        "quiet": 0,
+        "speed_factor": 1.25,
+        "api": False,
+        "api_url": "",
+        "api_key": "",
+        "gemini_key": "",
+        "gemini_model": "2.5-flash",
+        "whisper_model": "base",
+        "beam_size": 5,
+    }
+
+    user_saved_config: dict[str, Any] = config_manager.load_config()
+
+    final_config.update(user_saved_config)
+
+    load_dotenv(path_manager.parent_path / ".env")
+    gemini_key: str | None = os.getenv("GEMINI_API_KEY")
+    api_url: str | None = os.getenv("API_URL")
+    api_key: str | None = os.getenv("TRANSCRIPTION_API_KEY")
+
+    if gemini_key:
+        final_config["gemini_key"] = gemini_key
+    if api_url:
+        final_config["api_url"] = api_url
+    if api_key:
+        final_config["api_key"] = api_key
+
+    dict_args = vars(args)
+    for key, value in dict_args.items():
+        if value is None:
+            continue
+        if key == "command":
+            continue
+        final_config[key] = value
+
+    return final_config
+
+
+def _check_required_config_params(
+    final_config: dict[str, Any], logger: logging.Logger
+) -> None:
+    if final_config["api"]:
+        if not final_config["api_url"]:
+            logger.exception("API URL is required when API mode is enabled.")
+            raise ValueError("API URL is required when API mode is enabled.")
+        if not final_config["api_key"]:
+            logger.exception("API key is required when API mode is enabled.")
+            raise ValueError("API key is required when API mode is enabled.")
+
+    if final_config["gemini_key"] == "":
+        logger.exception("Gemini API key is required.")
+        raise ValueError("Gemini API key is required.")
+
+
+def _get_user_system_language(logger: logging.Logger) -> str:
+    DEFAULT_LOCALE: str = "en_US"
+    lang_code: str | None
+
+    try:
+        locale.setlocale(locale.LC_ALL, "")
+        lang_code, _ = locale.getlocale()
+    except locale.Error:
+        lang_code = None
+
+    if not lang_code:
+        logger.warning("Failed to detect locale, using default: %s", DEFAULT_LOCALE)
+        lang_code = DEFAULT_LOCALE
+
+    return lang_code.split(".")[0].replace("_", "-")
 
 
 def setup(args: argparse.Namespace) -> AppConfig:
@@ -81,68 +159,53 @@ def setup(args: argparse.Namespace) -> AppConfig:
         ValueError: If a required environment variable is not set.
 
     """
+    GEMINI_MODEL_MAP = {
+        "1.0-pro": "models/gemini-1.0-pro",
+        "1.5-flash": "models/gemini-1.5-flash-latest",
+        "1.5-pro": "models/gemini-1.5-pro-latest",
+        "2.5-flash": "models/gemini-2.5-flash",
+        "2.5-pro": "models/gemini-2.5-pro",
+    }
+
     path_manager: PathManager = PathManager()
+    config_manager: ConfigManager = ConfigManager(path_manager.config_file_path)
+    youtube_service: YoutubeService = YoutubeService()
+    cache_manager: CacheManager = CacheManager()
 
     setup_logging(path_manager.log_file_path)
     logger: logging.Logger = logging.getLogger(__name__)
 
-    load_dotenv(path_manager.parent_path / ".env")
-    gemini_key: str | None = os.getenv("GEMINI_API_KEY")
-    api_url: str | None = os.getenv("API_URL")
-    api_key: str | None = os.getenv("TRANSCRIPTION_API_KEY")
+    final_config: dict[str, Any] = _resolve_config(args, path_manager, config_manager)
 
-    if gemini_key is None:
-        logger.error("GEMINI_API_KEY environment variable not set")
-        raise ValueError("GEMINI_API_KEY environment variable not set")
-    if api_url is None:
-        logger.error("API_URL environment variable not set")
-        raise ValueError("API_URL environment variable not set")
-    if api_key is None:
-        logger.error("TRANSCRIPTION_API_KEY environment variable not set")
-        raise ValueError("TRANSCRIPTION_API_KEY environment variable not set")
+    _check_required_config_params(final_config, logger)
 
-    DEFAULT_LOCALE: str = "en_US"
-    lang_code: str | None
+    user_language: str = _get_user_system_language(logger)
 
-    try:
-        locale.setlocale(locale.LC_ALL, "")
-        lang_code, _ = locale.getlocale()
-    except locale.Error:
-        lang_code = None
-
-    if not lang_code:
-        logger.warning("Failed to detect locale, using default: %s", DEFAULT_LOCALE)
-        lang_code = DEFAULT_LOCALE
-
-    user_language = lang_code.split(".")[0].replace("_", "-")
-
-    speed_factor: float = 1.25
-
-    youtube_service: YoutubeService = YoutubeService()
-    cache_manager: CacheManager = CacheManager()
-
-    genai.configure(api_key=gemini_key)
-    gemini_model: GenerativeModel = genai.GenerativeModel("models/gemini-2.5-flash")
+    genai.configure(api_key=final_config["gemini_key"])
+    gemini_model: GenerativeModel = genai.GenerativeModel(
+        GEMINI_MODEL_MAP[final_config["gemini_model"]]
+    )
 
     return AppConfig(
-        logger,
-        path_manager,
-        youtube_service,
-        cache_manager,
-        gemini_model,
-        args.url,
-        args.output_path,
-        args.keep_cache,
-        args.log_level,
-        speed_factor,
-        args.use_api,
-        api_url,
-        api_key,
-        gemini_key,
-        args.gemini_model_name,
-        args.whisper_model,
-        args.beam_size,
-        user_language,
+        logger=logger,
+        path_manager=path_manager,
+        youtube_service=youtube_service,
+        cache_manager=cache_manager,
+        config_manager=config_manager,
+        gemini_model=gemini_model,
+        url=final_config["url"],
+        output_path=Path(final_config["output_path"]),
+        keep_cache=final_config["keep_cache"],
+        quiet=final_config["quiet"],
+        speed_factor=final_config["speed"],
+        api=final_config["api"],
+        api_url=final_config["api_url"],
+        api_key=final_config["api_key"],
+        gemini_key=final_config["gemini_key"],
+        gemini_model_name=final_config["gemini_model"],
+        whisper_model=final_config["whisper_model"],
+        beam_size=final_config["beam_size"],
+        user_language=user_language,
     )
 
 
@@ -227,7 +290,7 @@ def run_application(args: argparse.Namespace) -> None:
     It contains the primary error handling for the application's workflow.
 
     Args:
-        url (str): The YouTube URL to be processed.
+        args (argparse.Namespace): The parsed command-line arguments.
 
     Raises:
         PipelineError: If an error occurs during the execution of a pipeline.
@@ -262,7 +325,7 @@ def run_application(args: argparse.Namespace) -> None:
             return
 
         config.logger.info("No suitable caption found. Starting transcription pipeline")
-        transcription_pipeline(config, url)
+        transcription_pipeline(config, config.url)
 
     except Exception as e:
         if config:
@@ -287,8 +350,8 @@ def handle_config_command(args: argparse.Namespace) -> None:
                 continue
             if key == "command":
                 continue
-            if key == "output":
-                current_configs["output_path"] = str(value)
+            if key == "output-path":
+                current_configs[key] = str(value)
                 continue
             current_configs[key] = value
 

@@ -3,14 +3,6 @@
 import argparse
 from pathlib import Path
 
-GEMINI_MODEL_MAP = {
-    "1.0-pro": "models/gemini-1.0-pro",
-    "1.5-flash": "models/gemini-1.5-flash-latest",
-    "1.5-pro": "models/gemini-1.5-pro-latest",
-    "2.5-flash": "models/gemini-2.5-flash",
-    "2.5-pro": "models/gemini-2.5-pro",
-}
-
 WHISPER_MODEL_LIST = [
     "tiny",
     "base",
@@ -18,6 +10,14 @@ WHISPER_MODEL_LIST = [
     "medium",
     "large",
     "large-v2",
+]
+
+GEMINI_MODEL_LIST = [
+    "1.0-pro",
+    "1.5-flash",
+    "1.5-pro",
+    "2.5-flash",
+    "2.5-pro",
 ]
 
 
@@ -57,7 +57,7 @@ def parse_arguments() -> argparse.Namespace:
 
     parser_summarize.add_argument(
         "-o",
-        "--output",
+        "--output-path",
         type=Path,
         help="The output directory.",
     )
@@ -79,7 +79,7 @@ def parse_arguments() -> argparse.Namespace:
 
     parser_summarize.add_argument(
         "-s",
-        "--speed",
+        "--speed-factor",
         type=float,
         default=1.25,
         help="The speed factor for the audio. Default is 1.25.",
@@ -114,7 +114,7 @@ def parse_arguments() -> argparse.Namespace:
         "-g",
         "--gemini-model",
         type=str,
-        choices=GEMINI_MODEL_MAP.keys(),
+        choices=GEMINI_MODEL_LIST,
         default="2.5-flash",
         help="Set the Gemini model",
     )
@@ -140,14 +140,14 @@ def parse_arguments() -> argparse.Namespace:
 
     parser_config.add_argument(
         "-o",
-        "--output",
+        "--output-path",
         type=Path,
         help="Set the default output directory.",
     )
 
     parser_config.add_argument(
         "-s",
-        "--speed",
+        "--speed-factor",
         type=float,
         help="Set the default speed factor value.",
     )
@@ -174,7 +174,7 @@ def parse_arguments() -> argparse.Namespace:
         "-g",
         "--gemini-model",
         type=str,
-        choices=GEMINI_MODEL_MAP.keys(),
+        choices=GEMINI_MODEL_LIST,
         help="Set the default Gemini model.",
     )
 
