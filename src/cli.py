@@ -20,6 +20,13 @@ GEMINI_MODEL_LIST = [
     "2.5-pro",
 ]
 
+DEVICES_LIST = [
+    "cuda",
+    "mps",
+    "cpu",
+    "auto",
+]
+
 
 def parse_arguments() -> argparse.Namespace:
     """Set up the argument parser and parses the command-line arguments.
@@ -42,7 +49,7 @@ def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="content-summarizer",
         description="An cli program that summarizes youtube videos.",
-        epilog="Example usage: content-summarizer https://youtu.be/jNQXAC9IVRw?si=d_6O-o9B5Lv8ShI5",
+        epilog="Example usage: content-summarizer summarize https://youtu.be/jNQXAC9IVRw?si=d_6O-o9B5Lv8ShI5",
     )
 
     subparsers = parser.add_subparsers(dest="command")
@@ -53,7 +60,7 @@ def parse_arguments() -> argparse.Namespace:
         help="Send an Youtube Url to be summarized.",
     )
 
-    parser_summarize.add_argument("url", type=str, help="The URL of the YouTube video.")
+    parser_summarize.add_argument("url", type=str, help="The URL of the youtube video.")
 
     parser_summarize.add_argument(
         "-o",
@@ -66,14 +73,13 @@ def parse_arguments() -> argparse.Namespace:
         "-c",
         "--keep-cache",
         action="store_true",
-        help="Keep the cache directory.",
+        help="Keep the cache directory after the execution.",
     )
 
     parser_summarize.add_argument(
         "-q",
         "--quiet",
         action="count",
-        default=0,
         help="Increase logger level in the stderr",
     )
 
@@ -81,8 +87,7 @@ def parse_arguments() -> argparse.Namespace:
         "-s",
         "--speed-factor",
         type=float,
-        default=1.25,
-        help="The speed factor for the audio. Default is 1.25.",
+        help="The speed factor for the audio.",
     )
 
     parser_summarize.add_argument(
@@ -115,7 +120,6 @@ def parse_arguments() -> argparse.Namespace:
         "--gemini-model",
         type=str,
         choices=GEMINI_MODEL_LIST,
-        default="2.5-flash",
         help="Set the Gemini model",
     )
 
@@ -124,12 +128,18 @@ def parse_arguments() -> argparse.Namespace:
         "--whisper-model",
         type=str,
         choices=WHISPER_MODEL_LIST,
-        default="base",
         help="Set the Whisper model",
     )
 
     parser_summarize.add_argument(
-        "-b", "--beam-size", type=int, default=5, help="The beam size for Whisper."
+        "-b", "--beam-size", type=int, help="The beam size for Whisper."
+    )
+
+    parser_summarize.add_argument(
+        "--device",
+        type=str,
+        choices=DEVICES_LIST,
+        help="The device to use for Whisper.",
     )
 
     # Creation and configuration of the Summarize subparser
@@ -191,6 +201,13 @@ def parse_arguments() -> argparse.Namespace:
         "--beam-size",
         type=int,
         help="Set the default Whisper beam size.",
+    )
+
+    parser_config.add_argument(
+        "--device",
+        type=str,
+        choices=DEVICES_LIST,
+        help="Set the default Whisper device.",
     )
 
     return parser.parse_args()

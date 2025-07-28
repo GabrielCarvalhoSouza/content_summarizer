@@ -2,10 +2,13 @@
 
 import json
 import logging
+from collections.abc import Iterable
 from pathlib import Path
 from typing import IO
 
 import requests
+from faster_whisper import WhisperModel
+from faster_whisper.transcribe import Segment
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -16,7 +19,33 @@ class TranscriptionError(Exception):
     pass
 
 
-def fetch_transcription(api_url: str, audio_file_path: Path, api_key: str) -> str:
+def fetch_transcription_local(
+    audio_file_path: Path, whisper_model_name: str, beam_size: int, device: str
+) -> str:
+    compute_type: str = "auto"
+    if device == "cpu":
+        compute_type = "int8"
+    try:
+        whisper_model = WhisperModel(
+            whisper_model_name, device=device, compute_type=compute_type
+        )
+        logger.info("Initializing transcription")
+
+        segments: Iterable[Segment]
+        segments, _ = whisper_model.transcribe(
+            str(audio_file_path), beam_size=beam_size
+        )
+        transcription_text: str = "".join(segment.text for segment in segments)
+
+        logger.info("Transcription completed")
+        return transcription_text
+
+    except Exception as e:
+        logger.error("Error during transcription: %s", e)
+        raise TranscriptionError(f"Error during transcription: {e}") from e
+
+
+def fetch_transcription_api(api_url: str, audio_file_path: Path, api_key: str) -> str:
     """Send an audio file to the transcription API and returns the transcribed text.
 
     This function handles the API request and error handling, returning the

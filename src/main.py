@@ -5,6 +5,7 @@ import locale
 import logging
 import os
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -21,7 +22,7 @@ from .data_models import VideoMetadata
 from .logger_config import setup_logging
 from .path_manager import PathManager
 from .summary_service import generate_summary
-from .transcription_service import fetch_transcription
+from .transcription_service import fetch_transcription_api, fetch_transcription_local
 from .youtube_service import YoutubeService
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -65,6 +66,7 @@ class AppConfig:
     gemini_model_name: str
     whisper_model: str
     beam_size: int
+    device: str
     user_language: str
 
 
@@ -83,6 +85,7 @@ def _resolve_config(
         "gemini_model": "2.5-flash",
         "whisper_model": "base",
         "beam_size": 5,
+        "device": "auto",
     }
 
     user_saved_config: dict[str, Any] = config_manager.load_config()
@@ -206,6 +209,7 @@ def setup(args: argparse.Namespace) -> AppConfig:
         whisper_model=final_config["whisper_model"],
         beam_size=final_config["beam_size"],
         user_language=user_language,
+        device=final_config["device"],
     )
 
 
@@ -260,11 +264,26 @@ def transcription_pipeline(config: AppConfig, url: str) -> None:
         audio_processor.accelerate_audio(config.speed_factor)
 
     if not config.path_manager.transcription_file_path.exists():
-        transcription = fetch_transcription(
-            config.api_url,
-            accelerated_audio_path,
-            config.api_key,
-        )
+        transcription_fetcher: dict[bool, Callable[[], str]] = {
+            True: lambda: fetch_transcription_api(
+                config.api_url,
+                accelerated_audio_path,
+                config.api_key,
+            ),
+            False: lambda: fetch_transcription_local(
+                accelerated_audio_path,
+                config.whisper_model,
+                config.beam_size,
+                config.device,
+            ),
+        }
+
+        selected_fetcher: Callable[[], str] = transcription_fetcher[config.api]
+        transcription: str = selected_fetcher()
+
+        if not transcription:
+            raise PipelineError("Failed to fetch transcription")
+
         config.cache_manager.save_text_file(
             transcription, config.path_manager.transcription_file_path
         )
