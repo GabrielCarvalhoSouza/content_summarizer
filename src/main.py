@@ -4,7 +4,7 @@ import logging
 import sys
 
 from .cli import parse_arguments
-from .core import handle_config_command, run_application
+from .core import handle_config_command, summarize_video_pipeline
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
@@ -21,7 +21,7 @@ def main() -> None:
         if args.command == "config":
             handle_config_command(args)
             return
-        run_application(args)
+        summarize_video_pipeline(args)
         logging.info("Application completed successfully.")
     except Exception:
         logging.critical("Fatal error occurred. Exiting application.")

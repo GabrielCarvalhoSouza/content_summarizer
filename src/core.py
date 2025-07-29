@@ -145,7 +145,7 @@ def _get_user_system_language(logger: logging.Logger) -> str:
     return lang_code.split(".")[0].replace("_", "-")
 
 
-def setup(args: argparse.Namespace) -> AppConfig:
+def build_app_config(args: argparse.Namespace) -> AppConfig:
     """Initialize all services, configurations, and dependencies.
 
     This function sets up logging, loads environment variables from a .env file,
@@ -269,7 +269,7 @@ def _save_transcription(
         config.cache_manager.save_text_file(transcription, transcription_file_path)
 
 
-def _get_source_path(config: AppConfig, caption: str | None) -> Path:
+def _prepare_source_file(config: AppConfig, caption: str | None) -> Path:
     if caption:
         config.logger.info("Manual caption found. Starting caption pipeline")
         _save_caption(config, caption)
@@ -288,7 +288,7 @@ def _get_source_path(config: AppConfig, caption: str | None) -> Path:
     return transcription_file_path
 
 
-def run_application(args: argparse.Namespace) -> None:
+def summarize_video_pipeline(args: argparse.Namespace) -> None:
     """Run the main application logic, acting as a dispatcher.
 
     This function initializes the configuration, loads video information,
@@ -306,7 +306,7 @@ def run_application(args: argparse.Namespace) -> None:
     """
     config: AppConfig | None = None
     try:
-        config = setup(args)
+        config = build_app_config(args)
         config.youtube_service.load_from_url(config.url)
         config.path_manager.set_video_id(config.youtube_service.video_id)
 
@@ -326,7 +326,7 @@ def run_application(args: argparse.Namespace) -> None:
             config.path_manager.metadata_file_path,
         )
 
-        source_path = _get_source_path(config, caption)
+        source_path = _prepare_source_file(config, caption)
 
         summary_file_path: Path = config.path_manager.get_summary_path(
             config.gemini_model_name,
