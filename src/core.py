@@ -21,6 +21,8 @@ from .summary_service import generate_summary
 from .transcription_service import fetch_transcription_api, fetch_transcription_local
 from .youtube_service import YoutubeService
 
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+
 
 class SetupError(Exception):
     """Exception raised for errors in the setup process."""
@@ -309,7 +311,11 @@ def summarize_video_pipeline(args: argparse.Namespace) -> None:
         config = build_app_config(args)
         config.youtube_service.load_from_url(config.url)
         config.path_manager.set_video_id(config.youtube_service.video_id)
+    except Exception as e:
+        logging.exception("An error occurred during the setup")
+        raise SetupError(f"An error occurred during the setup: {e}") from e
 
+    try:
         caption: str | None = config.youtube_service.find_best_captions(
             config.user_language
         )
@@ -346,11 +352,8 @@ def summarize_video_pipeline(args: argparse.Namespace) -> None:
             config.cache_manager.save_text_file(summary, summary_file_path)
 
     except Exception as e:
-        if config:
-            config.logger.exception("An error occurred during the pipeline")
-            raise PipelineError(f"An error occurred during the pipeline: {e}") from e
-        logging.exception("An error occurred during the setup")
-        raise SetupError(f"An error occurred during the setup: {e}") from e
+        config.logger.exception("An error occurred during the pipeline")
+        raise PipelineError(f"An error occurred during the pipeline: {e}") from e
 
 
 def handle_config_command(args: argparse.Namespace) -> None:
