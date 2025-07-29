@@ -118,17 +118,20 @@ def _resolve_config(
 def _check_required_config_params(
     final_config: dict[str, Any], logger: logging.Logger
 ) -> None:
-    if final_config["api"]:
-        if not final_config["api_url"]:
-            logger.exception("API URL is required when API mode is enabled.")
-            raise ValueError("API URL is required when API mode is enabled.")
-        if not final_config["api_key"]:
-            logger.exception("API key is required when API mode is enabled.")
-            raise ValueError("API key is required when API mode is enabled.")
-
     if final_config["gemini_key"] == "":
         logger.exception("Gemini API key is required.")
         raise ValueError("Gemini API key is required.")
+
+    if not final_config["api"]:
+        return
+
+    if not final_config["api_url"]:
+        logger.exception("API URL is required when API mode is enabled.")
+        raise ValueError("API URL is required when API mode is enabled.")
+
+    if not final_config["api_key"]:
+        logger.exception("API key is required when API mode is enabled.")
+        raise ValueError("API key is required when API mode is enabled.")
 
 
 def _get_user_system_language(logger: logging.Logger) -> str:
@@ -213,7 +216,7 @@ def setup(args: argparse.Namespace) -> AppConfig:
     )
 
 
-def caption_pipeline(config: AppConfig, caption: str) -> None:
+def _save_caption(config: AppConfig, caption: str) -> None:
     """Execute the caption-based summary pipeline.
 
     This is the "fast path" workflow. It takes the pre-existing caption text,
@@ -226,33 +229,9 @@ def caption_pipeline(config: AppConfig, caption: str) -> None:
 
     """
     config.cache_manager.save_text_file(caption, config.path_manager.caption_file_path)
-    summary = generate_summary(
-        config.gemini_model,
-        config.user_language,
-        config.path_manager.caption_file_path,
-    )
-
-    if summary:
-        config.cache_manager.save_text_file(
-            summary, config.path_manager.summary_file_path
-        )
 
 
-def transcription_pipeline(config: AppConfig, url: str) -> None:
-    """Execute the full transcription-based summary pipeline.
-
-    This is the "slow path" workflow, used when no suitable captions are found.
-    It orchestrates all necessary steps: audio download, acceleration,
-    transcription via API, caching, and final summary generation.
-
-    Args:
-        config (AppConfig): The application configuration object.
-        url (str): The URL of the YouTube video (passed for context, though unused).
-
-    """
-    accelerated_audio_path: Path = config.path_manager.get_accelerated_audio_path(
-        config.speed_factor
-    )
+def _save_accelerated_audio(config: AppConfig, accelerated_audio_path: Path) -> None:
     audio_processor: AudioProcessor = AudioProcessor(
         config.path_manager.audio_file_path, accelerated_audio_path
     )
@@ -263,12 +242,21 @@ def transcription_pipeline(config: AppConfig, url: str) -> None:
     if not accelerated_audio_path.exists():
         audio_processor.accelerate_audio(config.speed_factor)
 
-    if not config.path_manager.transcription_file_path.exists():
+
+def _save_transcription(
+    config: AppConfig, accelerated_audio_path: Path, transcription_file_path: Path
+) -> None:
+    if not transcription_file_path.exists():
+        # Assert and default arguments are only for linter
+        # It'll never be None because of _check_required_config_params()
+        assert config.api_url is not None
+        assert config.api_key is not None
         transcription_fetcher: dict[bool, Callable[[], str]] = {
-            True: lambda: fetch_transcription_api(
-                config.api_url,
+            True: lambda url=config.api_url,
+            key=config.api_key: fetch_transcription_api(
+                url,
                 accelerated_audio_path,
-                config.api_key,
+                key,
             ),
             False: lambda: fetch_transcription_local(
                 accelerated_audio_path,
@@ -284,20 +272,26 @@ def transcription_pipeline(config: AppConfig, url: str) -> None:
         if not transcription:
             raise PipelineError("Failed to fetch transcription")
 
-        config.cache_manager.save_text_file(
-            transcription, config.path_manager.transcription_file_path
-        )
+        config.cache_manager.save_text_file(transcription, transcription_file_path)
 
-    summary = generate_summary(
-        config.gemini_model,
-        config.user_language,
-        config.path_manager.transcription_file_path,
+
+def _get_source_path(config: AppConfig, caption: str | None) -> Path:
+    if caption:
+        config.logger.info("Manual caption found. Starting caption pipeline")
+        _save_caption(config, caption)
+        return config.path_manager.caption_file_path
+
+    config.logger.info("No suitable caption found. Starting transcription pipeline")
+    accelerated_audio_path: Path = config.path_manager.get_accelerated_audio_path(
+        config.speed_factor
     )
+    transcription_file_path: Path = config.path_manager.get_transcription_path(
+        config.whisper_model, config.speed_factor, config.beam_size
+    )
+    _save_accelerated_audio(config, accelerated_audio_path)
+    _save_transcription(config, accelerated_audio_path, transcription_file_path)
 
-    if summary:
-        config.cache_manager.save_text_file(
-            summary, config.path_manager.summary_file_path
-        )
+    return transcription_file_path
 
 
 def run_application(args: argparse.Namespace) -> None:
@@ -338,13 +332,24 @@ def run_application(args: argparse.Namespace) -> None:
             config.path_manager.metadata_file_path,
         )
 
-        if caption:
-            config.logger.info("Manual caption found. Starting caption pipeline")
-            caption_pipeline(config, caption)
-            return
+        source_path = _get_source_path(config, caption)
 
-        config.logger.info("No suitable caption found. Starting transcription pipeline")
-        transcription_pipeline(config, config.url)
+        summary_file_path: Path = config.path_manager.get_summary_path(
+            config.gemini_model_name,
+            config.user_language,
+            config.whisper_model,
+            config.speed_factor,
+            config.beam_size,
+        )
+
+        summary = generate_summary(
+            config.gemini_model,
+            config.user_language,
+            source_path,
+        )
+
+        if summary:
+            config.cache_manager.save_text_file(summary, summary_file_path)
 
     except Exception as e:
         if config:

@@ -7,7 +7,9 @@ Classes:
 
 """
 
+import hashlib
 import logging
+from hashlib import _Hash
 from pathlib import Path
 from typing import Self
 
@@ -31,6 +33,18 @@ class PathManager:
         """Initialize the PathManager."""
         self._video_id: str | None = None
 
+    def _get_params_hash(self, params: dict[str, str]) -> str:
+        string_parts: list[str] = []
+
+        for key, value in params.items():
+            string_parts.append(f"{key}-{value}")
+
+        str_params: str = "-".join(sorted(string_parts))
+        bytes_params: bytes = str_params.encode("utf-8")
+        hash_params: _Hash = hashlib.md5(bytes_params)
+
+        return hash_params.hexdigest()[:7]
+
     def set_video_id(self, video_id: str) -> Self:
         """Set the video ID to be processed.
 
@@ -52,7 +66,48 @@ class PathManager:
 
         """
         _speed_factor = str(speed_factor)
-        return self.video_dir_path / f"audio{_speed_factor}.mp3"
+        return self.video_dir_path / f"audio-{_speed_factor}x.mp3"
+
+    def get_transcription_path(
+        self, whisper_model_name: str, speed_factor: float, beam_size: int
+    ) -> Path:
+        """Get the path of the transcription file.
+
+        Returns:
+            Path: The path of the transcription file.
+
+        """
+        params: dict[str, str] = {
+            "whisper_model_name": whisper_model_name,
+            "speed_factor": str(speed_factor),
+            "beam_size": str(beam_size),
+        }
+        return (
+            self.video_dir_path / f"transcription-{self._get_params_hash(params)}.txt"
+        )
+
+    def get_summary_path(
+        self,
+        gemini_model_name: str,
+        user_language: str,
+        whisper_model_name: str,
+        speed_factor: float,
+        beam_size: int,
+    ) -> Path:
+        """Get the path of the summary file.
+
+        Returns:
+            Path: The path of the summary file.
+
+        """
+        params: dict[str, str] = {
+            "gemini_model_name": gemini_model_name,
+            "user_language": user_language,
+            "whisper_model_name": whisper_model_name,
+            "speed_factor": str(speed_factor),
+            "beam_size": str(beam_size),
+        }
+        return self.video_dir_path / f"summary-{self._get_params_hash(params)}.md"
 
     @property
     def video_id(self) -> str:
@@ -111,16 +166,6 @@ class PathManager:
         return self.video_dir_path / "audio.mp3"
 
     @property
-    def transcription_file_path(self) -> Path:
-        """Get the path of the transcription file.
-
-        Returns:
-            Path: The path of the transcription file.
-
-        """
-        return self.video_dir_path / "transcription.txt"
-
-    @property
     def caption_file_path(self) -> Path:
         """Get the path of the caption file.
 
@@ -129,16 +174,6 @@ class PathManager:
 
         """
         return self.video_dir_path / "caption.txt"
-
-    @property
-    def summary_file_path(self) -> Path:
-        """Get the path of the summary file.
-
-        Returns:
-            Path: The path of the summary file.
-
-        """
-        return self.video_dir_path / "summary.md"
 
     @property
     def metadata_file_path(self) -> Path:
