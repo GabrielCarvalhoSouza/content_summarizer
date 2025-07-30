@@ -5,8 +5,8 @@ import sys
 
 from .cli import parse_arguments
 from .core import handle_config_command, summarize_video_pipeline
-
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+from .logger_config import setup_logging
+from .path_manager import PathManager
 
 
 def main() -> None:
@@ -17,14 +17,18 @@ def main() -> None:
     appropriate system exit code.
     """
     args = parse_arguments()
+    path_manager: PathManager = PathManager()
+
+    setup_logging(path_manager.log_file_path)
+    logger: logging.Logger = logging.getLogger(__name__)
     try:
         if args.command == "config":
-            handle_config_command(args)
+            handle_config_command(args, logger, path_manager)
             return
-        summarize_video_pipeline(args)
-        logging.info("Application completed successfully.")
+        summarize_video_pipeline(args, logger, path_manager)
+        logger.info("Application completed successfully.")
     except Exception:
-        logging.critical("Fatal error occurred. Exiting application.")
+        logger.critical("Fatal error occurred. Exiting application.")
         sys.exit(1)
 
 

@@ -15,7 +15,6 @@ from .audio_processor import AudioProcessor
 from .cache_manager import CacheManager
 from .config_manager import ConfigManager
 from .data_models import VideoMetadata
-from .logger_config import setup_logging
 from .path_manager import PathManager
 from .summary_service import generate_summary
 from .transcription_service import fetch_transcription_api, fetch_transcription_local
@@ -147,7 +146,9 @@ def _get_user_system_language(logger: logging.Logger) -> str:
     return lang_code.split(".")[0].replace("_", "-")
 
 
-def build_app_config(args: argparse.Namespace) -> AppConfig:
+def build_app_config(
+    args: argparse.Namespace, logger: logging.Logger, path_manager: PathManager
+) -> AppConfig:
     """Initialize all services, configurations, and dependencies.
 
     This function sets up logging, loads environment variables from a .env file,
@@ -169,13 +170,9 @@ def build_app_config(args: argparse.Namespace) -> AppConfig:
         "2.5-pro": "models/gemini-2.5-pro",
     }
 
-    path_manager: PathManager = PathManager()
     config_manager: ConfigManager = ConfigManager(path_manager.config_file_path)
     youtube_service: YoutubeService = YoutubeService()
     cache_manager: CacheManager = CacheManager()
-
-    setup_logging(path_manager.log_file_path)
-    logger: logging.Logger = logging.getLogger(__name__)
 
     final_config: dict[str, Any] = _resolve_config(args, path_manager, config_manager)
 
@@ -290,7 +287,9 @@ def _prepare_source_file(config: AppConfig, caption: str | None) -> Path:
     return transcription_file_path
 
 
-def summarize_video_pipeline(args: argparse.Namespace) -> None:
+def summarize_video_pipeline(
+    args: argparse.Namespace, logger: logging.Logger, path_manager: PathManager
+) -> None:
     """Run the main application logic, acting as a dispatcher.
 
     This function initializes the configuration, loads video information,
@@ -308,11 +307,11 @@ def summarize_video_pipeline(args: argparse.Namespace) -> None:
     """
     config: AppConfig | None = None
     try:
-        config = build_app_config(args)
+        config = build_app_config(args, logger, path_manager)
         config.youtube_service.load_from_url(config.url)
         config.path_manager.set_video_id(config.youtube_service.video_id)
     except Exception as e:
-        logging.exception("An error occurred during the setup")
+        logger.exception("An error occurred during the setup")
         raise SetupError(f"An error occurred during the setup: {e}") from e
 
     try:
@@ -329,12 +328,12 @@ def summarize_video_pipeline(args: argparse.Namespace) -> None:
 
         config.cache_manager.save_metadata_file(
             video_metadata,
-            config.path_manager.metadata_file_path,
+            path_manager.metadata_file_path,
         )
 
         source_path = _prepare_source_file(config, caption)
 
-        summary_file_path: Path = config.path_manager.get_summary_path(
+        summary_file_path: Path = path_manager.get_summary_path(
             config.gemini_model_name,
             config.user_language,
             config.whisper_model,
@@ -356,11 +355,10 @@ def summarize_video_pipeline(args: argparse.Namespace) -> None:
         raise PipelineError(f"An error occurred during the pipeline: {e}") from e
 
 
-def handle_config_command(args: argparse.Namespace) -> None:
-    path_manager: PathManager = PathManager()
+def handle_config_command(
+    args: argparse.Namespace, logger: logging.Logger, path_manager: PathManager
+) -> None:
     config_manager: ConfigManager = ConfigManager(path_manager.config_file_path)
-    setup_logging(path_manager.log_file_path)
-    logger: logging.Logger = logging.getLogger(__name__)
 
     try:
         current_configs: dict[str, Any] = config_manager.load_config()
