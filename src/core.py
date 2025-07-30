@@ -20,8 +20,6 @@ from .summary_service import generate_summary
 from .transcription_service import fetch_transcription_api, fetch_transcription_local
 from .youtube_service import YoutubeService
 
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
-
 
 class SetupError(Exception):
     """Exception raised for errors in the setup process."""
