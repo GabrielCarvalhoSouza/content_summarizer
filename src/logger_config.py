@@ -105,7 +105,7 @@ def setup_logging(log_file_path: Path) -> None:
     if logger.hasHandlers():
         logger.handlers.clear()
 
-    console_handler = colorlog.StreamHandler(sys.stdout)
+    console_handler = colorlog.StreamHandler(sys.stderr)
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(CustomTerminalFormatter())
 
