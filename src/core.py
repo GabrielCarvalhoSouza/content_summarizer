@@ -5,6 +5,7 @@ import os
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from shutil import rmtree
 from typing import Any
 
 import google.generativeai as genai
@@ -351,6 +352,9 @@ def summarize_video_pipeline(
     except Exception as e:
         config.logger.exception("An error occurred during the pipeline")
         raise PipelineError(f"An error occurred during the pipeline: {e}") from e
+    finally:
+        if config and path_manager.video_dir_path.exists() and not config.keep_cache:
+            rmtree(path_manager.video_dir_path)
 
 
 def handle_config_command(
