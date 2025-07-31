@@ -11,6 +11,8 @@ from typing import Any
 import google.generativeai as genai
 from dotenv import load_dotenv
 from google.generativeai.generative_models import GenerativeModel
+from rich.console import Console
+from rich.markdown import Markdown
 
 from .audio_processor import AudioProcessor
 from .cache_manager import CacheManager
@@ -351,6 +353,11 @@ def summarize_video_pipeline(
 
         if summary:
             config.cache_manager.save_text_file(summary, summary_file_path)
+
+        if summary and not config.no_terminal:
+            console: Console = Console()
+            markdown_summary: Markdown = Markdown(summary)
+            console.print(markdown_summary)
 
     except Exception as e:
         config.logger.exception("An error occurred during the pipeline")
