@@ -142,7 +142,13 @@ def parse_arguments() -> argparse.Namespace:
         help="The device to use for Whisper.",
     )
 
-    # Creation and configuration of the Summarize subparser
+    parser_summarize.add_argument(
+        "--no-terminal",
+        action="store_true",
+        help="Disable the terminal summary output.",
+    )
+
+    # Creation and configuration of the Config subparser
     parser_config = subparsers.add_parser(
         "config",
         help="Configure the default parameters for the application.",

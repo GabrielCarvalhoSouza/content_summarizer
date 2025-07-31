@@ -61,6 +61,7 @@ class AppConfig:
     whisper_model: str
     beam_size: int
     device: str
+    no_terminal: bool
     user_language: str
 
 
@@ -80,6 +81,7 @@ def _resolve_config(
         "whisper_model": "base",
         "beam_size": 5,
         "device": "auto",
+        "no_terminal": False,
     }
 
     user_saved_config: dict[str, Any] = config_manager.load_config()
@@ -204,6 +206,7 @@ def build_app_config(
         whisper_model=final_config["whisper_model"],
         beam_size=final_config["beam_size"],
         user_language=user_language,
+        no_terminal=final_config["no_terminal"],
         device=final_config["device"],
     )
 
