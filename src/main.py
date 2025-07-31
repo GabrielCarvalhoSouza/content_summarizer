@@ -19,7 +19,7 @@ def main() -> None:
     args = parse_arguments()
     path_manager: PathManager = PathManager()
 
-    setup_logging(path_manager.log_file_path)
+    setup_logging(path_manager.log_file_path, args.quiet)
     logger: logging.Logger = logging.getLogger(__name__)
     try:
         if args.command == "config":

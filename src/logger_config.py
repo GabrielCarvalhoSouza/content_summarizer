@@ -64,31 +64,7 @@ class CustomTerminalFormatter(colorlog.ColoredFormatter):
             record.exc_text = original_exc_text
 
 
-class TracebackFileFormatter(colorlog.ColoredFormatter):
-    """Specialized log formatter that only writes exception tracebacks to a file.
-
-    For any log record that contains exception information, this formatter will
-    extract and return only the formatted traceback string. For all other
-    log records, it returns an empty string, resulting in a clean error log
-    that only contains tracebacks.
-    """
-
-    def format(self, record: logging.LogRecord) -> str:
-        """Format the log record, returning only the traceback if it exists.
-
-        Args:
-            record (logging.LogRecord): The log record to be formatted.
-
-        Returns:
-            str: The formatted traceback string, or an empty string.
-
-        """
-        if record.exc_info:
-            return super().formatException(record.exc_info)
-        return ""
-
-
-def setup_logging(log_file_path: Path) -> None:
+def setup_logging(log_file_path: Path, quiet: int) -> None:
     """Set up the application-wide logging with dual handlers.
 
     This function configures the root logger to send messages to two different
@@ -97,6 +73,7 @@ def setup_logging(log_file_path: Path) -> None:
 
     Args:
         log_file_path (Path): The destination path for the error log file.
+        quiet (int): A flag indicating whether to suppress console output.
 
     """
     logger = logging.getLogger()
@@ -107,13 +84,20 @@ def setup_logging(log_file_path: Path) -> None:
 
     console_handler = colorlog.StreamHandler(sys.stderr)
     console_handler.setLevel(logging.INFO)
+    if quiet == 1:
+        console_handler.setLevel(logging.WARNING)
+    if quiet >= 2:
+        console_handler.setLevel(100000)  # no logs
     console_handler.setFormatter(CustomTerminalFormatter())
 
     file_handler = logging.FileHandler(log_file_path, mode="w", encoding="utf-8")
 
-    file_handler.setLevel(logging.ERROR)
+    file_handler.setLevel(logging.INFO)
 
-    file_handler.setFormatter(TracebackFileFormatter())
+    file_formatter = logging.Formatter(
+        "%(asctime)s - %(levelname)s - [%(name)s:%(lineno)d] - %(message)s"
+    )
+    file_handler.setFormatter(file_formatter)
 
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
