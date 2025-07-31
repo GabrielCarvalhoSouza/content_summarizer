@@ -7,6 +7,7 @@ from .cli import parse_arguments
 from .core import handle_config_command, summarize_video_pipeline
 from .logger_config import setup_logging
 from .path_manager import PathManager
+from .warning_config import setup_warnings
 
 
 def main() -> None:
@@ -16,10 +17,13 @@ def main() -> None:
     safety net, catching any fatal exceptions, logging them, and setting the
     appropriate system exit code.
     """
+    setup_warnings()
     args = parse_arguments()
     path_manager: PathManager = PathManager()
 
-    setup_logging(path_manager.log_file_path, args.quiet)
+    quiet_level = getattr(args, "quiet", 0)
+
+    setup_logging(path_manager.log_file_path, quiet_level)
     logger: logging.Logger = logging.getLogger(__name__)
     try:
         if args.command == "config":

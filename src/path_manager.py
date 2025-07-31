@@ -9,7 +9,6 @@ Classes:
 
 import hashlib
 import logging
-from hashlib import _Hash
 from pathlib import Path
 from typing import Self
 
@@ -41,7 +40,8 @@ class PathManager:
 
         str_params: str = "-".join(sorted(string_parts))
         bytes_params: bytes = str_params.encode("utf-8")
-        hash_params: _Hash = hashlib.md5(bytes_params)
+        # there is no type hint because the type has an underscore
+        hash_params = hashlib.md5(bytes_params)
 
         return hash_params.hexdigest()[:7]
 

@@ -80,6 +80,7 @@ def parse_arguments() -> argparse.Namespace:
         "-q",
         "--quiet",
         action="count",
+        default=0,
         help="Increase logger level in the stderr",
     )
 

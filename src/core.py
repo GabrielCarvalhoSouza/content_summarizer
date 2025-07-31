@@ -199,7 +199,7 @@ def build_app_config(
         output_path=Path(final_config["output_path"]),
         keep_cache=final_config["keep_cache"],
         quiet=final_config["quiet"],
-        speed_factor=final_config["speed"],
+        speed_factor=final_config["speed_factor"],
         api=final_config["api"],
         api_url=final_config["api_url"],
         api_key=final_config["api_key"],

@@ -90,6 +90,7 @@ def setup_logging(log_file_path: Path, quiet: int) -> None:
         console_handler.setLevel(100000)  # no logs
     console_handler.setFormatter(CustomTerminalFormatter())
 
+    log_file_path.parent.mkdir(parents=True, exist_ok=True)
     file_handler = logging.FileHandler(log_file_path, mode="w", encoding="utf-8")
 
     file_handler.setLevel(logging.INFO)
