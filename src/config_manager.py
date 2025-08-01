@@ -1,4 +1,10 @@
-"""Provides a centralized class for managing all config-related file operations."""
+"""Manages the application's persistent configuration.
+
+This module provides a class to handle reading from and writing to the
+user's configuration file (config.json), abstracting file I/O operations
+and error handling away from the core application logic.
+
+"""
 
 import json
 import logging
@@ -9,14 +15,18 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class ConfigManager:
-    """Handles reading and writing the user's configuration file."""
+    """Handles reading and writing the user's configuration file.
+
+    Attributes:
+        _config_file (Path): The path to the configuration file.
+
+    """
 
     def __init__(self, config_file_path: Path) -> None:
         """Initialize the ConfigManager.
 
         Args:
-            config_file_path (Path): The path to the directory where the
-                                    configuration file is stored.
+            config_file_path: The path to the configuration file.
 
         """
         self._config_file = config_file_path
@@ -24,20 +34,30 @@ class ConfigManager:
     def load_config(self) -> dict[str, Any]:
         """Load configurations from the config.json file.
 
-        This method reads the JSON configuration file. If the file does not
-        exist or contains invalid JSON, it safely returns an empty dictionary.
+        Reads the JSON configuration file. If the file does not exist
+        or contains invalid JSON, it safely returns an empty dictionary.
 
         Returns:
-            dict: A dictionary containing the user's saved configurations.
+            A dictionary containing the user's saved configurations, or an
+            empty dictionary if an error occurs.
 
         """
-        if self._config_file.is_file():
-            try:
-                with self._config_file.open("r") as f:
-                    return json.load(f)
-            except json.JSONDecodeError:
-                return {}
-        return {}
+        if not self._config_file.is_file():
+            logger.info(
+                "Configuration file not found. "
+                "The application will run with its internal settings."
+            )
+            return {}
+
+        try:
+            with self._config_file.open("r") as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            logger.warning(
+                "Configuration file is corrupted or invalid. "
+                "The application will run with its internal settings instead."
+            )
+            return {}
 
     def save_config(self, config_data: dict[str, Any]) -> None:
         """Save a dictionary of configurations to the config.json file.
