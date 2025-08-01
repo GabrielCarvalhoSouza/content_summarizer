@@ -10,9 +10,12 @@ Classes:
 import hashlib
 import logging
 from pathlib import Path
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 from platformdirs import user_cache_path, user_config_path, user_data_path
+
+if TYPE_CHECKING:
+    from hashlib import _Hash
 
 app_name = "content-summarizer"
 app_author = "CorvoCS08"
@@ -40,8 +43,7 @@ class PathManager:
 
         str_params: str = "-".join(sorted(string_parts))
         bytes_params: bytes = str_params.encode("utf-8")
-        # there is no type hint because the type has an underscore
-        hash_params = hashlib.md5(bytes_params)
+        hash_params: _Hash = hashlib.md5(bytes_params)
 
         return hash_params.hexdigest()[:7]
 
