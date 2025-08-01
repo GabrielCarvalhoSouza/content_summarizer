@@ -1,10 +1,9 @@
-"""Download and manage video services.
+"""Defines the base interface for video services.
 
-This module provides an abstract base class for downloading and managing video services.
+This module provides an abstract base class that ensures any video service
+implementation will have a consistent set of methods and properties required
+by the application's core logic.
 
-Classes:
-    BaseVideoService: Abstract base class for video services. It defines the basic
-        methods and properties that a video service should have.
 """
 
 from abc import ABC, abstractmethod
