@@ -1,4 +1,11 @@
-"""Provides a centralized class for managing all cache-related file operations."""
+"""Manages the creation and writing of cache files.
+
+This module provides a stateless utility class responsible for all
+file-writing operations related to caching (e.g., metadata,
+transcripts, summaries), ensuring that this logic is centralized
+and decoupled from the main application pipeline.
+
+"""
 
 import json
 import logging
@@ -11,11 +18,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class CacheManager:
-    """Handles writing and managing cache files for the application.
-
-    This class abstracts file I/O operations, ensuring that all cache writes
-    are handled consistently and robustly.
-    """
+    """A stateless utility class for handling cache file operations."""
 
     def _write_to_file(self, content: str, file_path: Path) -> None:
         """Private helper method to write text content to a specified file path.
@@ -24,8 +27,8 @@ class CacheManager:
         creation and OS-level errors.
 
         Args:
-            content (str): The string content to be written to the file.
-            file_path (Path): The destination file path.
+            content: The string content to be written to the file.
+            file_path: The destination file path.
 
         Raises:
             OSError: If the file cannot be written due to I/O or permission issues.
@@ -44,12 +47,11 @@ class CacheManager:
     def save_metadata_file(
         self, video_metadata: VideoMetadata, metadata_file_path: Path
     ) -> None:
-        """Serialize video metadata to JSON and saves it to a file.
+        """Serialize VideoMetadata to JSON and saves it to a file.
 
         Args:
-            video_metadata (VideoMetadata): The dataclass object containing video
-                metadata.
-            metadata_file_path (Path): The path for the 'metadata.json' file.
+            video_metadata: The dataclass object to be saved.
+            metadata_file_path: The destination file path for the metadata.
 
         """
         video_metadata_dict = asdict(video_metadata)
@@ -60,10 +62,11 @@ class CacheManager:
     def save_text_file(self, text: str, text_file_path: Path) -> None:
         """Save a plain text string to a specified file path.
 
+        Used for saving content like captions, transcriptions, or summaries.
+
         Args:
-            text (str): The text content to save.
-            text_file_path (Path): The destination file path (e.g., for captions or
-                summaries).
+            text: The text content to save.
+            text_file_path: The destination file path.
 
         """
         self._write_to_file(text, text_file_path)
