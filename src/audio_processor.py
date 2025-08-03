@@ -77,7 +77,7 @@ class AudioProcessor:
             logger.info(f"Audio accelerated {_speed_factor}x successfully")
         except subprocess.CalledProcessError as e:
             logger.exception("Audio acceleration found an error: %s", e.stderr)
-            raise AudioProcessingError(f"Audio acceleration found an error: {e}") from e
+            raise AudioProcessingError("Audio acceleration found an error") from e
         except FileNotFoundError as e:
             msg = "FFmpeg not found. Ensure it is installed and in the system's PATH."
             logger.exception(msg)

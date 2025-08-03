@@ -107,7 +107,7 @@ class YoutubeService(BaseVideoService):
                 self.video_id,
                 self.title,
             )
-            raise DownloadError(f"Failed to download audio: {e}") from e
+            raise DownloadError("Failed to download audio") from e
 
     def find_best_captions(self, user_language: str) -> str | None:
         """Find the best available manual caption and returns its clean text.

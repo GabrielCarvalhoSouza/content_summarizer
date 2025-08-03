@@ -70,7 +70,7 @@ def fetch_transcription_local(
 
     except Exception as e:
         logger.exception("Failed to transcribe audio")
-        raise TranscriptionError(f"Failed to transcribe audio: {e}") from e
+        raise TranscriptionError("Failed to transcribe audio") from e
 
 
 def fetch_transcription_api(api_url: str, audio_file_path: Path, api_key: str) -> str:
@@ -107,7 +107,7 @@ def fetch_transcription_api(api_url: str, audio_file_path: Path, api_key: str) -
 
     except requests.exceptions.RequestException as e:
         logger.exception("Failed to transcribe audio")
-        raise TranscriptionError(f"Failed to transcribe audio: {e}") from e
+        raise TranscriptionError("Failed to transcribe audio") from e
     except json.JSONDecodeError as e:
         logger.exception("Failed to parse JSON response")
-        raise TranscriptionError(f"Failed to parse JSON response: {e}") from e
+        raise TranscriptionError("Failed to parse JSON response") from e

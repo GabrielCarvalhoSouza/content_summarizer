@@ -73,4 +73,4 @@ def generate_summary(
         return res.text
     except Exception as e:
         logger.exception("Failed to generate summary")
-        raise SummaryError(f"Failed to generate summary: {e}") from e
+        raise SummaryError("Failed to generate summary") from e
