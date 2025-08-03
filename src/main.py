@@ -1,4 +1,10 @@
-"""Main entry point and orchestrator for the Content Summarizer."""
+"""Main entry point for the Content Summarizer application.
+
+This module is responsible for initializing the application, parsing command-line
+arguments, setting up logging, and dispatching tasks to the appropriate
+core functions. It acts as the primary orchestrator and final error handler.
+
+"""
 
 import logging
 import sys
@@ -11,11 +17,13 @@ from .warning_config import setup_warnings
 
 
 def main() -> None:
-    """Entry point for the application script.
+    """Run the main application logic.
 
-    This function calls the core application logic and acts as the final
-    safety net, catching any fatal exceptions, logging them, and setting the
-    appropriate system exit code.
+    This function initializes all necessary components (warnings, args, logging),
+    acts as a dispatcher to call the correct core function based on the
+    user's command, and serves as the final safety net, catching any
+    unhandled exceptions.
+
     """
     setup_warnings()
     args = parse_arguments()
