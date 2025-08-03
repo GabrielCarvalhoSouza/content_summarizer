@@ -1,4 +1,10 @@
-"""Handles audio processing tasks, such as acceleration, using FFmpeg."""
+"""Handles audio processing operations using FFmpeg.
+
+This module provides a class that wraps FFmpeg command-line operations,
+such as audio acceleration, abstracting the subprocess management
+and error handling away from the main application logic.
+
+"""
 
 import logging
 import shutil
@@ -9,15 +15,18 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class AudioProcessingError(Exception):
-    """An exception raised when there is an error during audio processing."""
+    """Custom exception for errors during audio processing."""
 
 
 class AudioProcessor:
-    """A class to process audio files.
+    """A class to process audio files using FFmpeg.
 
-    Args:
-        input_path (Path): The path to the source audio file.
-        output_path (Path): The path where the processed audio file will be saved.
+    This class requires FFmpeg to be installed and available in the system's
+    PATH.
+
+    Attributes:
+        _input_path: The path to the source audio file.
+        _output_path: The path where the processed audio will be saved.
 
     """
 
@@ -25,35 +34,35 @@ class AudioProcessor:
         """Initialize the AudioProcessor.
 
         Args:
-            input_path (Path): The input audio file path.
-            output_path (Path): The output audio file path.
+            input_path: The input audio file path.
+            output_path: The output audio file path.
 
         """
         self._input_path = input_path
         self._output_path = output_path
 
     def accelerate_audio(self, speed_factor: float) -> None:
-        """Accelerates the audio file by a given factor using FFmpeg.
+        """Accelerates the audio file by a given factor.
 
-        This method overwrites the output file if it already exists.
-        It relies on the calling pipeline to manage caching.
+        This method relies on the FFmpeg command-line tool. It will overwrite
+        the output file if it already exists.
 
         Args:
-            speed_factor (float): The factor by which to accelerate the audio.
+            speed_factor: The factor by which to accelerate the audio (e.g., 1.5).
 
         Raises:
-            AudioProcessingError: If the input file is not found or if the
-                                  FFmpeg command fails.
+            AudioProcessingError: If the input file is not found, if FFmpeg
+                            is not installed, or if the FFmpeg command fails.
 
         """
-        _speed_factor = str(speed_factor)
         if not self._input_path.exists():
             logger.error("Input audio file does not exist")
             raise AudioProcessingError("Input audio file does not exist")
-        if _speed_factor == "1.0":
+        if speed_factor == 1.0:
             shutil.copy(self._input_path, self._output_path)
             logger.warning("Speed factor is 1.0, skipping audio acceleration")
             return
+        _speed_factor = str(speed_factor)
         ffmpeg = [
             "ffmpeg",
             "-y",
@@ -70,5 +79,6 @@ class AudioProcessor:
             logger.exception("Audio acceleration found an error: %s", e.stderr)
             raise AudioProcessingError(f"Audio acceleration found an error: {e}") from e
         except FileNotFoundError as e:
-            logger.exception("FFmpeg not found: %s", e)
-            raise AudioProcessingError(f"FFmpeg not found: {e}") from e
+            msg = "FFmpeg not found. Ensure it is installed and in the system's PATH."
+            logger.exception(msg)
+            raise AudioProcessingError(msg) from e
