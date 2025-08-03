@@ -1,9 +1,9 @@
-"""Path manager for the content summarizer.
+"""Manages all dynamic file and directory paths for the application.
 
-This module provides a custom path manager for the content summarizer.
-
-Classes:
-    PathManager: A class to manage paths for the content summarizer.
+This module provides a centralized PathManager class that is responsible
+for generating all context-dependent paths, such as for specific videos,
+cache files, and configuration. It ensures path consistency and makes
+the file structure easier to manage and modify.
 
 """
 
@@ -24,10 +24,13 @@ logger = logging.getLogger(__name__)
 
 
 class PathManager:
-    """A class to manage paths for the content summarizer.
+    """Manages dynamic application paths.
+
+    This class holds the state for a specific execution (like a video ID)
+    and generates all necessary file paths based on that state.
 
     Attributes:
-        _video_id (str | None): The video ID to be processed.
+        _video_id: The unique identifier for the content being processed.
 
     """
 
@@ -35,7 +38,8 @@ class PathManager:
         """Initialize the PathManager."""
         self._video_id: str | None = None
 
-    def _get_params_hash(self, params: dict[str, str]) -> str:
+    @staticmethod
+    def _get_params_hash(params: dict[str, str]) -> str:
         string_parts: list[str] = []
 
         for key, value in params.items():
@@ -48,23 +52,28 @@ class PathManager:
         return hash_params.hexdigest()[:7]
 
     def set_video_id(self, video_id: str) -> Self:
-        """Set the video ID to be processed.
+        """Set the video ID for the current context.
+
+        This method allows the PathManager to generate video-specific paths.
 
         Args:
-            video_id (str): The video ID.
+            video_id: The unique identifier for the video.
 
         Returns:
-            Self: The PathManager instance.
+            The instance of the PathManager.
 
         """
         self._video_id = video_id
         return self
 
     def get_accelerated_audio_path(self, speed_factor: float) -> Path:
-        """Get the path of the acelerated audio file.
+        """Get the path for the accelerated audio file.
+
+        Args:
+            speed_factor: The playback speed multiplier.
 
         Returns:
-            Path: The path of the acelerated audio file.
+            The full path for the speed-adjusted audio file.
 
         """
         _speed_factor = str(speed_factor)
@@ -73,10 +82,15 @@ class PathManager:
     def get_transcription_path(
         self, whisper_model_name: str, speed_factor: float, beam_size: int
     ) -> Path:
-        """Get the path of the transcription file.
+        """Get the path for the transcription file based on its parameters.
+
+        Args:
+            whisper_model_name: The name of the Whisper model used.
+            speed_factor: The audio speed factor used.
+            beam_size: The beam size used for transcription.
 
         Returns:
-            Path: The path of the transcription file.
+            The full path for the generated transcription file.
 
         """
         params: dict[str, str] = {
@@ -96,10 +110,17 @@ class PathManager:
         speed_factor: float,
         beam_size: int,
     ) -> Path:
-        """Get the path of the summary file.
+        """Get the path for the summary file based on its parameters.
+
+        Args:
+            gemini_model_name: The name of the Gemini model used.
+            user_language: The target language of the summary.
+            whisper_model_name: The name of the Whisper model used for the source.
+            speed_factor: The audio speed factor used for the source.
+            beam_size: The beam size used for the source transcription.
 
         Returns:
-            Path: The path of the summary file.
+            The full path for the generated summary file.
 
         """
         params: dict[str, str] = {
@@ -113,17 +134,17 @@ class PathManager:
 
     @property
     def video_id(self) -> str:
-        """Get the video ID.
+        """Get the currently configured video ID.
 
         Raises:
-            ValueError: If the video ID is not set.
+            ValueError: If the video ID has not been set via set_video_id().
 
         Returns:
-            str: The video ID.
+            The video ID string.
 
         """
         if self._video_id is None:
-            logger.error("Video ID is not set, call set_video_id() first")
+            logger.error("Internal Error: Video ID is not set")
             raise ValueError("Video ID is not set, call set_video_id() first")
         return self._video_id
 
