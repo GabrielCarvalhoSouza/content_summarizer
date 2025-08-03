@@ -1,3 +1,20 @@
+"""Orchestrates the main application logic and configuration building.
+
+This module acts as the central hub of the application. It contains the primary
+pipeline for summarizing content, the logic for handling user configurations,
+and the functions responsible for building the main application state object.
+
+Classes:
+    SetupError: Custom exception for errors during the initial setup phase.
+    PipelineError: Custom exception for errors during the main processing pipeline.
+    AppConfig: Dataclass holding all shared application configurations and services.
+
+Functions:
+    build_app_config: Initializes and returns the main AppConfig object.
+    summarize_video_pipeline: Runs the complete video summarization workflow.
+    handle_config_command: Processes and saves user configuration settings.
+"""
+
 import argparse
 import locale
 import logging
@@ -25,13 +42,13 @@ from .youtube_service import YoutubeService
 
 
 class SetupError(Exception):
-    """Exception raised for errors in the setup process."""
+    """Custom exception for errors during the setup process."""
 
     pass
 
 
 class PipelineError(Exception):
-    """Exception raised for errors during the pipeline execution."""
+    """Custom exception for errors during the pipeline execution."""
 
     pass
 
@@ -42,6 +59,30 @@ class AppConfig:
 
     This dataclass acts as a dependency injection container, making it easy to
     pass all necessary services and settings throughout the application.
+
+    Attributes:
+        logger: The configured logger instance for the application.
+        path_manager: The manager for all application paths.
+        youtube_service: The service for interacting with YouTube.
+        cache_manager: The manager for cache file operations.
+        config_manager: The manager for user configuration files.
+        gemini_model: The initialized Gemini GenerativeModel instance.
+        url: The URL of the content to be summarized.
+        output_path: The root directory for cache and output files.
+        keep_cache: A boolean to prevent cache deletion.
+        quiet: The console verbosity level.
+        speed_factor: The audio acceleration factor.
+        api: A boolean to select the remote transcription API.
+        api_url: The URL for the remote transcription API.
+        api_key: The API key for the remote transcription API.
+        gemini_key: The API key for the Gemini service.
+        gemini_model_name: The name of the Gemini model being used.
+        whisper_model: The name of the local Whisper model being used.
+        beam_size: The beam size for local transcription.
+        device: The device for local transcription (e.g., 'cuda', 'cpu').
+        no_terminal: A boolean to disable terminal output of the summary.
+        user_language: The detected user system language code.
+
     """
 
     logger: logging.Logger
@@ -70,6 +111,24 @@ class AppConfig:
 def _resolve_config(
     args: argparse.Namespace, path_manager: PathManager, config_manager: ConfigManager
 ) -> dict[str, Any]:
+    """Resolve the final configuration from multiple sources.
+
+    This function builds the final configuration dictionary by layering sources
+    in a specific order of precedence:
+    1. Default hardcoded values.
+    2. User's saved `config.json` file.
+    3. Environment variables from a `.env` file.
+    4. Command-line arguments.
+
+    Args:
+        args: The parsed command-line arguments.
+        path_manager: The application's path manager.
+        config_manager: The manager for the user's configuration file.
+
+    Returns:
+        A dictionary containing the final, resolved configuration.
+
+    """
     final_config: dict[str, Any] = {
         "output_path": path_manager.cache_dir_path,
         "keep_cache": False,
@@ -116,23 +175,48 @@ def _resolve_config(
 def _check_required_config_params(
     final_config: dict[str, Any], logger: logging.Logger
 ) -> None:
+    """Validate that all required configuration parameters are present.
+
+    Checks the resolved configuration dictionary for essential values, raising
+    an error if a required parameter is missing.
+
+    Args:
+        final_config: The resolved configuration dictionary.
+        logger: The application's logger.
+
+    Raises:
+        ValueError: If a required parameter is missing.
+
+    """
     if final_config["gemini_key"] == "":
-        logger.exception("Gemini API key is required.")
+        logger.error("Gemini API key is required, use the --gemini-key flag.")
         raise ValueError("Gemini API key is required.")
 
     if not final_config["api"]:
         return
 
     if not final_config["api_url"]:
-        logger.exception("API URL is required when API mode is enabled.")
+        logger.error("API URL is required when API mode is enabled.")
         raise ValueError("API URL is required when API mode is enabled.")
 
     if not final_config["api_key"]:
-        logger.exception("API key is required when API mode is enabled.")
+        logger.error("API key is required when API mode is enabled.")
         raise ValueError("API key is required when API mode is enabled.")
 
 
 def _get_user_system_language(logger: logging.Logger) -> str:
+    """Detect and normalize the user's system language.
+
+    Tries to get the system's locale and formats it into a web-compatible
+    language code (e.g., 'en-US'). Defaults to 'en-US' if detection fails.
+
+    Args:
+        logger: The application's logger.
+
+    Returns:
+        The normalized language code string.
+
+    """
     DEFAULT_LOCALE: str = "en_US"
     lang_code: str | None
 
@@ -152,17 +236,19 @@ def _get_user_system_language(logger: logging.Logger) -> str:
 def build_app_config(
     args: argparse.Namespace, logger: logging.Logger, path_manager: PathManager
 ) -> AppConfig:
-    """Initialize all services, configurations, and dependencies.
+    """Initialize and build the complete AppConfig object.
 
-    This function sets up logging, loads environment variables from a .env file,
-    normalizes the user's system locale to a web-compatible format, and
-    instantiates all necessary service classes.
+    This function orchestrates the entire setup process: it resolves the
+    configuration from all sources, initializes all service and manager
+    classes, and assembles them into a single AppConfig instance.
+
+    Args:
+        args: The parsed command-line arguments.
+        logger: The application's logger.
+        path_manager: The application's path manager.
 
     Returns:
-        AppConfig: A populated dataclass instance with all dependencies.
-
-    Raises:
-        ValueError: If a required environment variable is not set.
+        A populated AppConfig instance with all dependencies.
 
     """
     GEMINI_MODEL_MAP = {
@@ -214,21 +300,17 @@ def build_app_config(
 
 
 def _save_caption(config: AppConfig, caption: str) -> None:
-    """Execute the caption-based summary pipeline.
-
-    This is the "fast path" workflow. It takes the pre-existing caption text,
-    delegates saving it to the CacheManager, generates a summary from that
-    file, and finally saves the summary.
-
-    Args:
-        config (AppConfig): The application configuration object.
-        caption (str): The clean caption text to be processed.
-
-    """
+    """Save the provided caption text to a cache file."""
     config.cache_manager.save_text_file(caption, config.path_manager.caption_file_path)
 
 
 def _save_accelerated_audio(config: AppConfig, accelerated_audio_path: Path) -> None:
+    """Ensure the accelerated audio file exists, creating it if necessary.
+
+    This function orchestrates the audio processing. It first ensures the
+    original audio is downloaded and then accelerates it to the target speed
+    if the accelerated version doesn't already exist in the cache.
+    """
     audio_processor: AudioProcessor = AudioProcessor(
         config.path_manager.audio_file_path, accelerated_audio_path
     )
@@ -243,6 +325,13 @@ def _save_accelerated_audio(config: AppConfig, accelerated_audio_path: Path) -> 
 def _save_transcription(
     config: AppConfig, accelerated_audio_path: Path, transcription_file_path: Path
 ) -> None:
+    """Ensure the transcription file exists, creating it if necessary.
+
+    This function orchestrates the transcription process. It selects the
+    appropriate transcription method (local or API) based on the user's
+    configuration and saves the resulting text to a cache file if it
+    doesn't already exist.
+    """
     if not transcription_file_path.exists():
         # Assert and default arguments are only for linter
         # It'll never be None because of _check_required_config_params()
@@ -273,6 +362,20 @@ def _save_transcription(
 
 
 def _prepare_source_file(config: AppConfig, caption: str | None) -> Path:
+    """Prepare the source text file for summarization.
+
+    This function acts as a dispatcher. If a manual caption is available,
+    it saves it to a file. Otherwise, it triggers the full audio download
+    and transcription pipeline to generate the source file.
+
+    Args:
+        config: The application's configuration object.
+        caption: The pre-fetched caption text, or None.
+
+    Returns:
+        The path to the prepared source text file (caption or transcription).
+
+    """
     if caption:
         config.logger.info("Manual caption found. Starting caption pipeline")
         _save_caption(config, caption)
@@ -294,19 +397,21 @@ def _prepare_source_file(config: AppConfig, caption: str | None) -> Path:
 def summarize_video_pipeline(
     args: argparse.Namespace, logger: logging.Logger, path_manager: PathManager
 ) -> None:
-    """Run the main application logic, acting as a dispatcher.
+    """Run the main video summarization pipeline.
 
-    This function initializes the configuration, loads video information,
-    and then decides which pipeline to run (`caption_pipeline` or
-    `transcription_pipeline`) based on the availability of manual captions.
-    It contains the primary error handling for the application's workflow.
+    This function orchestrates the entire workflow, from setting up the
+    configuration and loading video info to preparing the source text and
+    generating the final summary. It contains the primary error handling for
+    the application's workflow.
 
     Args:
-        args (argparse.Namespace): The parsed command-line arguments.
+        args: The parsed command-line arguments from the user.
+        logger: The application's configured logger.
+        path_manager: The application's path manager.
 
     Raises:
-        PipelineError: If an error occurs during the execution of a pipeline.
-        SetupError: If an error occurs during the initial setup.
+        PipelineError: If an error occurs during the main processing stage.
+        SetupError: If an error occurs during the initial setup stage.
 
     """
     config: AppConfig | None = None
@@ -316,7 +421,7 @@ def summarize_video_pipeline(
         config.path_manager.set_video_id(config.youtube_service.video_id)
     except Exception as e:
         logger.exception("An error occurred during the setup")
-        raise SetupError(f"An error occurred during the setup: {e}") from e
+        raise SetupError("An error occurred during the setup") from e
 
     try:
         caption: str | None = config.youtube_service.find_best_captions(
@@ -361,15 +466,34 @@ def summarize_video_pipeline(
 
     except Exception as e:
         config.logger.exception("An error occurred during the pipeline")
-        raise PipelineError(f"An error occurred during the pipeline: {e}") from e
+        raise PipelineError("An error occurred during the pipeline:") from e
     finally:
         if config and path_manager.video_dir_path.exists() and not config.keep_cache:
             rmtree(path_manager.video_dir_path)
+            logger.info(
+                "Cache cleared, use --keep-cache to keep the video cache dir "
+                "for further runs."
+            )
 
 
 def handle_config_command(
     args: argparse.Namespace, logger: logging.Logger, path_manager: PathManager
 ) -> None:
+    """Process and save user configuration settings.
+
+    Reads the current configuration, updates it with any new values provided
+    by the user via command-line arguments, and saves it back to the
+    `config.json` file.
+
+    Args:
+        args: The parsed command-line arguments from the user.
+        logger: The application's configured logger.
+        path_manager: The application's path manager.
+
+    Raises:
+        OSError: If the configuration file cannot be written.
+
+    """
     config_manager: ConfigManager = ConfigManager(path_manager.config_file_path)
 
     try:
