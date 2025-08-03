@@ -41,7 +41,7 @@ def parse_arguments() -> argparse.Namespace:
     the 'summarize' and 'config' subparsers, and all their options.
 
     Returns:
-        Namespace: An object containing the parsed command-line arguments.
+        An object containing the parsed command-line arguments.
 
     """
     parser = argparse.ArgumentParser(

@@ -1,4 +1,11 @@
-"""Provides a function to generate a summary from text using the Gemini API."""
+"""Provides a service for generating summaries using the Gemini API.
+
+This module contains the function responsible for communicating with the
+Google Generative AI API, sending a transcription, and receiving a
+generated summary. It encapsulates the prompt engineering and error
+handling for this specific task.
+
+"""
 
 import logging
 import textwrap
@@ -11,7 +18,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class SummaryError(Exception):
-    """Custom exception for errors during summary generation."""
+    """Custom exception for errors during the summary generation process."""
 
     pass
 
@@ -19,31 +26,33 @@ class SummaryError(Exception):
 def generate_summary(
     gemini_model: GenerativeModel,
     user_language: str,
-    transcription_file_path: Path,
+    input_file_path: Path,
 ) -> str | None:
-    """Read a transcription file and generates a summary using the Gemini model.
+    """Generate a summary from a text file using the Gemini API.
 
-    This function validates the input file, constructs a prompt, calls the
-    Gemini API, and returns the generated summary text in memory.
+    This function reads a text file (like a transcription or caption), constructs a
+    detailed prompt, sends it to the Gemini API, and returns the
+    resulting summary.
 
     Args:
-        gemini_model (GenerativeModel): The initialized Gemini model instance.
-        user_language (str): The target language for the summary.
-        transcription_file_path (Path): The path to the text file containing the
-                                        transcription or caption.
+        gemini_model: An initialized instance of the GenerativeModel.
+        user_language: The target language for the summary (e.g., 'en-US').
+        input_file_path: The path to the text file to be summarized.
 
     Returns:
-        str: The generated summary text.
+        The generated summary text as a string, or None if the API
+        returns no text.
 
     Raises:
-        SummaryError: If the input file is not found or the API call fails.
+        FileNotFoundError: If the input_file_path does not exist.
+        SummaryError: If the API call fails or another exception occurs.
 
     """
-    if not transcription_file_path.exists():
-        logger.error("Transcription file not found")
-        raise FileNotFoundError("Transcription file not found")
+    if not input_file_path.exists():
+        logger.error("Input file not found")
+        raise FileNotFoundError("Input file not found")
 
-    with transcription_file_path.open("r", encoding="utf-8") as f:
+    with input_file_path.open("r", encoding="utf-8") as f:
         transcription_content: str = f.read()
         prompt: str = textwrap.dedent(f"""
             You are an expert summarizer with a knack for clarity and a great sense of humor. Your mission is to distill the following video transcript into a summary that is natural, engaging, and easy to read, as if a friend were explaining the main points.
