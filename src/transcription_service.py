@@ -1,4 +1,14 @@
-"""Provides a function to interact with the transcription API service."""
+"""Provides services for audio transcription.
+
+This module offers functions for transcribing audio files using either
+a local Whisper model or a remote transcription API. It encapsulates
+the logic for both methods, handling model loading, API requests, and
+error handling.
+
+Functions:
+    fetch_transcription_local: Transcribes audio using a local model.
+    fetch_transcription_api: Transcribes audio using a remote API.
+"""
 
 import json
 import logging
@@ -14,7 +24,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class TranscriptionError(Exception):
-    """An exception raised when there is an error during transcription."""
+    """Custom exception for errors during the transcription process."""
 
     pass
 
@@ -22,6 +32,24 @@ class TranscriptionError(Exception):
 def fetch_transcription_local(
     audio_file_path: Path, whisper_model_name: str, beam_size: int, device: str
 ) -> str:
+    """Transcribe an audio file locally using a Whisper model.
+
+    This function loads a Whisper model and runs the transcription
+    on the local machine.
+
+    Args:
+        audio_file_path: The path to the audio file to be transcribed.
+        whisper_model_name: The name of the Whisper model to use.
+        beam_size: The beam size for the transcription process.
+        device: The device to run the model on (e.g., 'cuda', 'cpu').
+
+    Returns:
+        The transcribed text as a string.
+
+    Raises:
+        TranscriptionError: If the transcription process fails for any reason.
+
+    """
     compute_type: str = "auto"
     if device == "cpu":
         compute_type = "int8"
@@ -41,23 +69,23 @@ def fetch_transcription_local(
         return transcription_text
 
     except Exception as e:
-        logger.error("Error during transcription: %s", e)
-        raise TranscriptionError(f"Error during transcription: {e}") from e
+        logger.exception("Failed to transcribe audio")
+        raise TranscriptionError(f"Failed to transcribe audio: {e}") from e
 
 
 def fetch_transcription_api(api_url: str, audio_file_path: Path, api_key: str) -> str:
-    """Send an audio file to the transcription API and returns the transcribed text.
+    """Send an audio file to a remote transcription API.
 
     This function handles the API request and error handling, returning the
-    transcription text in memory. It does not handle caching or file saving.
+    transcription text in memory.
 
     Args:
-        api_url (str): The URL of the transcription API endpoint.
-        audio_file_path (Path): The path to the audio file to be transcribed.
-        api_key (str): The API key for authentication.
+        api_url: The URL of the transcription API endpoint.
+        audio_file_path: The path to the audio file to be transcribed.
+        api_key: The API key for authentication.
 
     Returns:
-        str: The transcribed text returned by the API.
+        The transcribed text returned by the API as a string.
 
     Raises:
         TranscriptionError: If the API request fails or returns an error.
