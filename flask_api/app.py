@@ -1,10 +1,12 @@
-"""Flask API to transcribe audio file using Whisper.
+"""Flask API for transcribing audio files using a local Whisper model.
 
-POST /transcribe with a file named "audio" to transcribe the audio file
-and return the full transcription result as a JSON object.
+This module provides a single '/transcribe' endpoint that accepts POST
+requests with an audio file. It handles API key authentication, rate limiting,
+and orchestrates the transcription process, returning the result as JSON.
 
 """
 
+import hmac
 import logging
 import os
 import tempfile
@@ -58,19 +60,24 @@ whisper_model = WhisperModel("base", device="cpu", compute_type="int8")
 @app.route("/transcribe", methods=["POST"])
 @limiter.limit("2 per minute, 5 per day")
 def transcribe() -> Response | tuple[Response, int]:
-    """Handle POST requests to /transcribe.
+    """Handle audio transcription requests.
 
-    This function transcribes the uploaded audio file and returns the
-    full transcription result as a JSON object.
+    Accepts a POST request with a multipart form containing an 'audio' file.
+    It requires a valid 'X-Api-Key' header for authentication.
 
     Returns:
-        - 200 OK: transcription result as JSON
-        - 400 Bad Request: no audio file was uploaded
-        - 401 Unauthorized: invalid API key
-        - 500 Internal Server Error: an error occurred during transcription
+        - 200 OK: A JSON object with the transcription text.
+        - 400 Bad Request: If no audio file is provided.
+        - 401 Unauthorized: If the API key is missing or invalid.
+        - 429 Too Many Requests: If the rate limit is exceeded.
+        - 500 Internal Server Error: If an unexpected error occurs.
 
     """
-    if request.headers.get("X-Api-Key") != api_secret_key:
+    provided_api_key: str | None = request.headers.get("X-Api-Key")
+    assert api_secret_key
+    if not provided_api_key or not hmac.compare_digest(
+        provided_api_key, api_secret_key
+    ):
         logger.warning("Unauthorized request from %s", request.remote_addr)
         return jsonify({"error": "Unauthorized"}), 401
 

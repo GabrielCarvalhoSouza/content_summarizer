@@ -335,8 +335,8 @@ def _save_transcription(
     if not transcription_file_path.exists():
         # Assert and default arguments are only for linter
         # It'll never be None because of _check_required_config_params()
-        assert config.api_url is not None
-        assert config.api_key is not None
+        assert config.api_url
+        assert config.api_key
         transcription_fetcher: dict[bool, Callable[[], str]] = {
             True: lambda url=config.api_url,
             key=config.api_key: fetch_transcription_api(
