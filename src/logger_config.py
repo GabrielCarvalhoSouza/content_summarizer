@@ -1,4 +1,18 @@
-"""Custom logger configuration."""
+"""Configures the application's logging for dual output.
+
+This module is responsible for setting up the root logger to send logs
+to two distinct destinations: a user-friendly, colorized terminal output
+that suppresses stack traces, and a detailed file output that includes
+full tracebacks for debugging purposes.
+
+Classes:
+    CustomTerminalFormatter: A custom formatter for clean, user-friendly
+                             terminal output that suppresses tracebacks.
+
+Functions:
+    setup_logging: Configures the root logger with the dual-handler setup.
+
+"""
 
 import logging
 import sys
@@ -8,15 +22,16 @@ import colorlog
 
 
 class CustomTerminalFormatter(colorlog.ColoredFormatter):
-    """Custom log formatter for terminal output.
+    """Custom log formatter for clean terminal output.
 
-    This formatter displays INFO level logs as simple, clean messages without
-    any prefix. Other levels (WARNING, ERROR, CRITICAL) are prefixed with their
-    respective colored level names. It is designed to never display tracebacks
-    in the console.
+    This formatter is designed to provide a user-friendly console experience.
+    INFO level logs are displayed as clean messages, while other levels
+    (WARNING, ERROR) are prefixed with their colored level names.
+    Crucially, it guarantees that no tracebacks are ever printed to the
+    console.
 
     Attributes:
-        info_formatter (colorlog.ColoredFormatter): A specific formatter for INFO logs.
+        info_formatter: A specific formatter for INFO-level logs.
 
     """
 
@@ -35,18 +50,18 @@ class CustomTerminalFormatter(colorlog.ColoredFormatter):
         self.info_formatter = colorlog.ColoredFormatter(info_format)
 
     def format(self, record: logging.LogRecord) -> str:
-        """Format the log record while ensuring tracebacks are suppressed.
+        """Format the log record, suppressing console stack traces.
 
-        This method temporarily removes exception information from the log record
-        before passing it to the parent formatter, guaranteeing that no traceback
-        is ever printed to the console. The exception info is restored afterwards
-        so that other handlers (like the file handler) can still access it.
+        This method temporarily removes exception info from the record before
+        formatting, ensuring no traceback is printed to the console handler.
+        The exception info is restored afterward, allowing other handlers (like
+        a file handler) to still log the full traceback.
 
         Args:
-            record (logging.LogRecord): The log record to be formatted.
+            record: The log record to be formatted.
 
         Returns:
-            str: The final formatted string for the console.
+            The formatted string for the console.
 
         """
         original_exc_info = record.exc_info
@@ -64,16 +79,19 @@ class CustomTerminalFormatter(colorlog.ColoredFormatter):
             record.exc_text = original_exc_text
 
 
-def setup_logging(log_file_path: Path, quiet: int) -> None:
-    """Set up the application-wide logging with dual handlers.
+def setup_logging(log_file_path: Path, quiet_level: int) -> None:
+    """Configure the root logger for dual-handler output.
 
-    This function configures the root logger to send messages to two different
-    handlers: one for the console with a clean, user-friendly format, and one
-    for a file that exclusively logs tracebacks for debugging.
+    This function clears any existing handlers and sets up two new ones:
+    - A console handler with a custom formatter for clean, user-facing logs.
+    - A file handler that logs detailed information for debugging.
+
+    The verbosity of the console handler is controlled by the quiet_level.
 
     Args:
-        log_file_path (Path): The destination path for the error log file.
-        quiet (int): A flag indicating whether to suppress console output.
+        log_file_path: The destination path for the detailed log file.
+        quiet_level: An integer controlling console verbosity
+                    (0=info, 1=warning, 2+=silent).
 
     """
     logger = logging.getLogger()
@@ -84,10 +102,10 @@ def setup_logging(log_file_path: Path, quiet: int) -> None:
 
     console_handler = colorlog.StreamHandler(sys.stderr)
     console_handler.setLevel(logging.INFO)
-    if quiet == 1:
+    if quiet_level == 1:
         console_handler.setLevel(logging.WARNING)
-    if quiet >= 2:
-        console_handler.setLevel(100000)  # no logs
+    if quiet_level >= 2:
+        console_handler.setLevel(logging.CRITICAL + 1)
     console_handler.setFormatter(CustomTerminalFormatter())
 
     log_file_path.parent.mkdir(parents=True, exist_ok=True)

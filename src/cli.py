@@ -1,4 +1,10 @@
-"""Defines and parses command-line arguments for the application."""
+"""Defines the command-line interface for the application.
+
+This module uses the argparse library to build the entire CLI, including
+commands, sub-commands, and all their respective arguments and options.
+It is the main entry point for user interaction.
+
+"""
 
 import argparse
 from pathlib import Path
@@ -29,51 +35,45 @@ DEVICES_LIST = [
 
 
 def parse_arguments() -> argparse.Namespace:
-    """Set up the argument parser and parses the command-line arguments.
+    """Set up and parse all command-line arguments.
 
-    This function builds the entire CLI structure, including the main parser and
-    the 'summarize' and 'config' subparsers. It defines all the flags and
-    options available to the user for both commands.
-
-    Args:
-        cache_dir_path (Path): The default path for the cache directory,
-                               injected from the main application logic to be
-                               used as a default for the '--output' flag.
+    Builds the complete CLI structure, defining the main parser,
+    the 'summarize' and 'config' subparsers, and all their options.
 
     Returns:
-        argparse.Namespace: An object containing the parsed command-line
-                            arguments. The attributes of this object correspond
-                            to the argument names.
+        Namespace: An object containing the parsed command-line arguments.
 
     """
     parser = argparse.ArgumentParser(
         prog="content-summarizer",
-        description="An cli program that summarizes youtube videos.",
-        epilog="Example usage: content-summarizer summarize https://youtu.be/jNQXAC9IVRw?si=d_6O-o9B5Lv8ShI5",
+        description="A tool to summarize YouTube videos.",
+        epilog=(
+            "Example: content-summarizer summarize "
+            "https://youtu.be/jNQXAC9IVRw?si=d_6O-o9B5Lv8ShI5 --q"
+        ),
     )
 
     subparsers = parser.add_subparsers(dest="command")
 
-    # Creation and configuration of the Summarize subparser
     parser_summarize = subparsers.add_parser(
         "summarize",
-        help="Send an Youtube Url to be summarized.",
+        help="Summarize a YouTube video from a given URL.",
     )
 
-    parser_summarize.add_argument("url", type=str, help="The URL of the youtube video.")
+    parser_summarize.add_argument("url", type=str, help="The URL of the YouTube video.")
 
     parser_summarize.add_argument(
         "-o",
         "--output-path",
         type=Path,
-        help="The output directory.",
+        help="Specify a custom directory for output files.",
     )
 
     parser_summarize.add_argument(
         "-c",
         "--keep-cache",
         action="store_true",
-        help="Keep the cache directory after the execution.",
+        help="Prevent the deletion of cache files after execution.",
     )
 
     parser_summarize.add_argument(
@@ -81,39 +81,39 @@ def parse_arguments() -> argparse.Namespace:
         "--quiet",
         action="count",
         default=0,
-        help="Increase logger level in the stderr",
+        help="Decrease console verbosity. Use -q for warnings/errors, -qq for silent.",
     )
 
     parser_summarize.add_argument(
         "-s",
         "--speed-factor",
         type=float,
-        help="The speed factor for the audio.",
+        help="Specify the audio speed factor for acceleration (e.g., 1.5).",
     )
 
     parser_summarize.add_argument(
         "-a",
         "--api",
         action="store_true",
-        help="Use an API for whisper transcription instead of local.",
+        help="Use a remote API for transcription instead of local processing.",
     )
 
     parser_summarize.add_argument(
         "--api-url",
         type=str,
-        help="The URL of the API for whisper transcription.",
+        help="Specify the URL of the remote transcription API.",
     )
 
     parser_summarize.add_argument(
         "--api-key",
         type=str,
-        help="The key of the API for whisper transcription.",
+        help="Specify the API key for the remote transcription API.",
     )
 
     parser_summarize.add_argument(
         "--gemini-key",
         type=str,
-        help="The Gemini API key.",
+        help="Specify the Google AI Studio API key.",
     )
 
     parser_summarize.add_argument(
@@ -121,7 +121,7 @@ def parse_arguments() -> argparse.Namespace:
         "--gemini-model",
         type=str,
         choices=GEMINI_MODEL_LIST,
-        help="Set the Gemini model",
+        help="Specify the Gemini model to use for summarization.",
     )
 
     parser_summarize.add_argument(
@@ -129,62 +129,64 @@ def parse_arguments() -> argparse.Namespace:
         "--whisper-model",
         type=str,
         choices=WHISPER_MODEL_LIST,
-        help="Set the Whisper model",
+        help="Specify the Whisper model for local transcription.",
     )
 
     parser_summarize.add_argument(
-        "-b", "--beam-size", type=int, help="The beam size for Whisper."
+        "-b",
+        "--beam-size",
+        type=int,
+        help="Specify the beam size for local Whisper transcription.",
     )
 
     parser_summarize.add_argument(
         "--device",
         type=str,
         choices=DEVICES_LIST,
-        help="The device to use for Whisper.",
+        help="Specify the device for local transcription",
     )
 
     parser_summarize.add_argument(
         "--no-terminal",
         action="store_true",
-        help="Disable the terminal summary output.",
+        help="Disable printing the final summary to the terminal.",
     )
 
-    # Creation and configuration of the Config subparser
     parser_config = subparsers.add_parser(
         "config",
-        help="Configure the default parameters for the application.",
+        help="Specify the default configuration values.",
     )
 
     parser_config.add_argument(
         "-o",
         "--output-path",
         type=Path,
-        help="Set the default output directory.",
+        help="Specify the default custom directory for output files.",
     )
 
     parser_config.add_argument(
         "-s",
         "--speed-factor",
         type=float,
-        help="Set the default speed factor value.",
+        help="Specify the default audio speed factor for acceleration (e.g., 1.5).",
     )
 
     parser_config.add_argument(
         "--api-url",
         type=str,
-        help="Set the default API URL.",
+        help="Specify the default URL of the remote transcription API.",
     )
 
     parser_config.add_argument(
         "--api-key",
         type=str,
-        help="Set the default API key.",
+        help="Specify the default API key for the remote transcription API.",
     )
 
     parser_config.add_argument(
         "--gemini-key",
         type=str,
-        help="Set the default Gemini API key.",
+        help="Specify the default Google AI Studio API key.",
     )
 
     parser_config.add_argument(
@@ -192,7 +194,7 @@ def parse_arguments() -> argparse.Namespace:
         "--gemini-model",
         type=str,
         choices=GEMINI_MODEL_LIST,
-        help="Set the default Gemini model.",
+        help="Specify the default Gemini model to use for summarization.",
     )
 
     parser_config.add_argument(
@@ -200,21 +202,21 @@ def parse_arguments() -> argparse.Namespace:
         "--whisper-model",
         type=str,
         choices=WHISPER_MODEL_LIST,
-        help="Set the default Whisper model.",
+        help="Specify the default Whisper model for local transcription.",
     )
 
     parser_config.add_argument(
         "-b",
         "--beam-size",
         type=int,
-        help="Set the default Whisper beam size.",
+        help="Specify the default beam size for local Whisper transcription.",
     )
 
     parser_config.add_argument(
         "--device",
         type=str,
         choices=DEVICES_LIST,
-        help="Set the default Whisper device.",
+        help="Specify the default device for local transcription",
     )
 
     return parser.parse_args()
