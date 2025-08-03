@@ -1,6 +1,8 @@
-"""Provides a service to interact with YouTube.
+"""Provides a service to interact with the YouTube platform.
 
-Handles video loading, data extraction, and caption fetching.
+This module implements the BaseVideoService interface for YouTube. It uses
+the pytubefix library to handle video data extraction, audio downloading,
+and caption fetching.
 """
 
 import logging
@@ -16,14 +18,19 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class DownloadError(Exception):
-    """An exception that raises if there is an error downloading audio from YouTube."""
+    """Custom exception for errors during the YouTube audio download."""
 
 
 class YoutubeService(BaseVideoService):
     """A service to download audio and fetch captions from YouTube.
 
-    This class provides methods to load a YouTube video, download its audio
-    stream, and find the best available manual caption.
+    This class implements the BaseVideoService interface and provides methods
+    to load a YouTube video, download its audio, and find the best captions.
+
+    Attributes:
+        _yt: An instance of the pytubefix.YouTube object, loaded via
+            load_from_url().
+
     """
 
     def __init__(self) -> None:
@@ -34,10 +41,10 @@ class YoutubeService(BaseVideoService):
         """Load a video from a URL.
 
         Args:
-            source_url (str): The URL of the video to be loaded.
+            source_url: The URL of the video to be loaded.
 
         Returns:
-            Self: The instance of the YouTube service.
+            The instance of the YouTube service.
 
         """
         self._yt = YouTube(source_url)
@@ -75,14 +82,14 @@ class YoutubeService(BaseVideoService):
     def audio_download(self, audio_file_path: Path) -> None:
         """Download the highest quality audio-only stream to the specified path.
 
-        Note: This method does not check for existing files. The calling
-        pipeline is responsible for cache management.
+        This method downloads the highest quality audio-only stream from the
+        video and saves it to the specified path.
 
         Args:
             audio_file_path (Path): The full path where the audio file will be saved.
 
         Raises:
-            DownloadError: If the audio stream is not found or if the download fails.
+            DownloadError: If no audio stream is found or if the download fails.
 
         """
         output_path: Path = audio_file_path.parent
@@ -114,11 +121,10 @@ class YoutubeService(BaseVideoService):
         Auto-generated captions are always ignored.
 
         Args:
-            user_language (str): The user's preferred language code (e.g., 'pt-BR').
+            user_language: The user's preferred language code (e.g., 'pt-BR').
 
         Returns:
-            str | None: The clean caption text if a manual caption is found,
-                        otherwise None.
+            The clean caption text if a manual caption is found, otherwise None.
 
         """
         if not self.yt.captions:
