@@ -18,7 +18,7 @@ class ConfigManager:
     """Handles reading and writing the user's configuration file.
 
     Attributes:
-        _config_file (Path): The path to the configuration file.
+        _config_file: The path to the configuration file.
 
     """
 
@@ -67,7 +67,7 @@ class ConfigManager:
         ensures that the parent directory exists before writing.
 
         Args:
-            config_data (dict): A dictionary containing the configurations
+            config_data: A dictionary containing the configurations
                                 to be saved.
 
         Raises:

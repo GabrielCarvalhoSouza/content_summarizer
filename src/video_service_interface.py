@@ -18,9 +18,9 @@ class BaseVideoService(ABC):
     methods and properties that a video service should have.
 
     Attributes:
-        video_id (str): The ID of the video.
-        title (str): The title of the video.
-        author (str): The author of the video.
+        video_id: The ID of the video.
+        title: The title of the video.
+        author: The author of the video.
 
     """
 
@@ -29,7 +29,7 @@ class BaseVideoService(ABC):
         """Load a video from a URL.
 
         Args:
-            source_url (str): The URL of the video to be loaded.
+            source_url: The URL of the video to be loaded.
 
         Returns:
             Self: The instance of the video service.
@@ -75,7 +75,7 @@ class BaseVideoService(ABC):
         """Download the audio file of the video.
 
         Args:
-            audio_file_path (Path): The path of the audio file to be downloaded.
+            audio_file_path: The path of the audio file to be downloaded.
 
         """
         pass
