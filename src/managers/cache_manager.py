@@ -12,7 +12,7 @@ import logging
 from dataclasses import asdict
 from pathlib import Path
 
-from .data_models import VideoMetadata
+from ..data.data_models import VideoMetadata
 
 logger: logging.Logger = logging.getLogger(__name__)
 

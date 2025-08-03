@@ -11,9 +11,9 @@ import sys
 
 from .cli import parse_arguments
 from .core import handle_config_command, summarize_video_pipeline
-from .logger_config import setup_logging
-from .path_manager import PathManager
-from .warning_config import setup_warnings
+from .managers.path_manager import PathManager
+from .utils.logger_config import setup_logging
+from .utils.warning_config import setup_warnings
 
 
 def main() -> None:
