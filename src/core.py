@@ -84,7 +84,7 @@ class AppConfig:
         config_manager: The manager for user configuration files.
         gemini_model: The initialized Gemini GenerativeModel instance.
         url: The URL of the content to be summarized.
-        output_path: The root directory for cache and output files.
+        output_path: The root directory for output files.
         keep_cache: A boolean to prevent cache deletion.
         quiet: The console verbosity level.
         speed_factor: The audio acceleration factor.
@@ -108,7 +108,7 @@ class AppConfig:
     config_manager: ConfigManager
     gemini_model: GenerativeModel
     url: str
-    output_path: Path
+    output_path: Path | None
     keep_cache: bool
     quiet: int
     speed_factor: float
@@ -146,7 +146,7 @@ def _resolve_config(
 
     """
     final_config: dict[str, Any] = {
-        "output_path": path_manager.cache_dir_path,
+        "output_path": None,
         "keep_cache": False,
         "quiet": 0,
         "speed_factor": 1.25,
@@ -298,7 +298,9 @@ def build_app_config(
         config_manager=config_manager,
         gemini_model=gemini_model,
         url=final_config["url"],
-        output_path=Path(final_config["output_path"]),
+        output_path=(
+            Path(final_config["output_path"]) if final_config["output_path"] else None
+        ),
         keep_cache=final_config["keep_cache"],
         quiet=final_config["quiet"],
         speed_factor=final_config["speed_factor"],
@@ -479,6 +481,13 @@ def summarize_video_pipeline(
             console: Console = Console()
             markdown_summary: Markdown = Markdown(summary)
             console.print(markdown_summary)
+
+        if summary and config.output_path:
+            summary_output_path: Path = path_manager.get_final_summary_path(
+                config.youtube_service.title, config.output_path
+            )
+            config.cache_manager.save_text_file(summary, summary_output_path)
+            logger.info(f"Summary saved to {summary_output_path}")
 
     except Exception as e:
         config.logger.exception("An error occurred during the pipeline")

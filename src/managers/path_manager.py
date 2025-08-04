@@ -22,6 +22,7 @@ the file structure easier to manage and modify.
 
 import hashlib
 import logging
+import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Self
 
@@ -63,6 +64,28 @@ class PathManager:
         hash_params: _Hash = hashlib.md5(bytes_params)
 
         return hash_params.hexdigest()[:7]
+
+    @staticmethod
+    def sanitize_video_title(video_title: str) -> str:
+        """Sanitize a string to be used as a safe filename.
+
+        This method performs the following operations:
+        - Converts the string to lowercase.
+        - Replaces spaces with hyphens.
+        - Collapses multiple consecutive hyphens into a single one.
+        - Removes any leading or trailing hyphens.
+
+        Args:
+            video_title: The raw string title to be sanitized.
+
+        Returns:
+            A sanitized string suitable for use in a filename.
+
+        """
+        video_title = video_title.lower()
+        video_title = video_title.replace(" ", "-")
+        video_title = re.sub(r"-+", "-", video_title)
+        return video_title.strip("-")
 
     def set_video_id(self, video_id: str) -> Self:
         """Set the video ID for the current context.
@@ -144,6 +167,23 @@ class PathManager:
             "beam_size": str(beam_size),
         }
         return self.video_dir_path / f"summary-{self._get_params_hash(params)}.md"
+
+    def get_final_summary_path(self, video_title: str, output_dir: Path) -> Path:
+        """Get the path for the final, user-facing summary file.
+
+        This method generates a sanitized, human-readable filename based on the
+        video's title and combines it with the user-specified output directory.
+
+        Args:
+            video_title: The title of the video to be used for the filename.
+            output_dir: The target directory where the file will be saved.
+
+        Returns:
+            The full, final path for the summary file.
+
+        """
+        safe_title: str = self.sanitize_video_title(video_title)
+        return output_dir / f"{safe_title}.md"
 
     @property
     def video_id(self) -> str:
