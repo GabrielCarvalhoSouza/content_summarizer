@@ -36,9 +36,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from shutil import rmtree
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+import google.generativeai as genai
 from dotenv import load_dotenv
+from google.generativeai.generative_models import GenerativeModel
 from rich.console import Console
 from rich.markdown import Markdown
 
@@ -53,9 +55,6 @@ from content_summarizer.services.transcription_service import (
     fetch_transcription_local,
 )
 from content_summarizer.services.youtube_service import YoutubeService
-
-if TYPE_CHECKING:
-    from google.generativeai.generative_models import GenerativeModel
 
 
 class SetupError(Exception):
@@ -268,9 +267,6 @@ def build_app_config(
         A populated AppConfig instance with all dependencies.
 
     """
-    import google.generativeai as genai
-    from google.generativeai.generative_models import GenerativeModel
-
     GEMINI_MODEL_MAP = {
         "1.0-pro": "models/gemini-1.0-pro",
         "1.5-flash": "models/gemini-1.5-flash-latest",
@@ -401,11 +397,9 @@ def _prepare_source_file(config: AppConfig, caption: str | None) -> Path:
 
     """
     if caption:
-        config.logger.info("Manual caption found. Starting caption pipeline")
         _save_caption(config, caption)
         return config.path_manager.caption_file_path
 
-    config.logger.info("No suitable caption found. Starting transcription pipeline")
     accelerated_audio_path: Path = config.path_manager.get_accelerated_audio_path(
         config.speed_factor
     )
