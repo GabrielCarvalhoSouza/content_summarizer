@@ -40,10 +40,6 @@ dev = [
     "ruff",
     "mypy",
 ]
-api = [
-    "flask>=3.1.1",
-    "flask-limiter>=3.12",
-]
 
 [tool.ruff]
 line-length = 88

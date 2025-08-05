@@ -118,6 +118,16 @@ The application resolves settings with the following priority order:
 
 The `--api` flag allows you to offload transcription to a remote server. This project includes a simple Flask API in the `flask_api/` directory that you can deploy yourself.
 
+To set up the API, you will need to install its specific dependencies:
+
+```Bash
+# Navigate to the api directory
+cd flask_api/
+
+# Install the API dependencies
+uv pip install -r requirements.txt
+```
+
 To use this feature, you must:
 
 1.  Deploy the application found in the `flask_api/` folder to a server of your choice.
