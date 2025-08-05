@@ -44,7 +44,7 @@ class ConfigManager:
         """
         self._config_file = config_file_path
 
-    def load_config(self) -> dict[str, Any]:
+    def load_config(self, is_config: bool = False) -> dict[str, Any]:
         """Load configurations from the config.json file.
 
         Reads the JSON configuration file. If the file does not exist
@@ -55,7 +55,7 @@ class ConfigManager:
             empty dictionary if an error occurs.
 
         """
-        if not self._config_file.is_file():
+        if not self._config_file.is_file() and not is_config:
             logger.info(
                 "Configuration file not found. "
                 "The application will run with its internal settings."

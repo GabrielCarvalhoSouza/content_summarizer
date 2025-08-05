@@ -36,11 +36,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from shutil import rmtree
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import google.generativeai as genai
 from dotenv import load_dotenv
-from google.generativeai.generative_models import GenerativeModel
 from rich.console import Console
 from rich.markdown import Markdown
 
@@ -55,6 +53,9 @@ from content_summarizer.services.transcription_service import (
     fetch_transcription_local,
 )
 from content_summarizer.services.youtube_service import YoutubeService
+
+if TYPE_CHECKING:
+    from google.generativeai.generative_models import GenerativeModel
 
 
 class SetupError(Exception):
@@ -267,6 +268,9 @@ def build_app_config(
         A populated AppConfig instance with all dependencies.
 
     """
+    import google.generativeai as genai
+    from google.generativeai.generative_models import GenerativeModel
+
     GEMINI_MODEL_MAP = {
         "1.0-pro": "models/gemini-1.0-pro",
         "1.5-flash": "models/gemini-1.5-flash-latest",
@@ -524,7 +528,7 @@ def handle_config_command(
     config_manager: ConfigManager = ConfigManager(path_manager.config_file_path)
 
     try:
-        current_configs: dict[str, Any] = config_manager.load_config()
+        current_configs: dict[str, Any] = config_manager.load_config(is_config=True)
         dict_args: dict[str, Any] = vars(args)
 
         for key, value in dict_args.items():

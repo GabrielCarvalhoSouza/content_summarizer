@@ -23,9 +23,11 @@ handling for this specific task.
 import logging
 import textwrap
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from google.generativeai.generative_models import GenerativeModel
-from google.generativeai.types import GenerateContentResponse
+if TYPE_CHECKING:
+    from google.generativeai.generative_models import GenerativeModel
+    from google.generativeai.types import GenerateContentResponse
 
 logger: logging.Logger = logging.getLogger(__name__)
 

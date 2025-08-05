@@ -30,8 +30,6 @@ from pathlib import Path
 from typing import IO
 
 import requests
-from faster_whisper import WhisperModel
-from faster_whisper.transcribe import Segment
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -63,6 +61,9 @@ def fetch_transcription_local(
         TranscriptionError: If the transcription process fails for any reason.
 
     """
+    from faster_whisper import WhisperModel
+    from faster_whisper.transcribe import Segment
+
     compute_type: str = "auto"
     if device == "cpu":
         compute_type = "int8"
