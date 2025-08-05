@@ -112,7 +112,7 @@ The application resolves settings with the following priority order:
 
 3. User Configuration: Defaults set via the `config` command.
 
-4. **Application Defaults:** The program's default values. You can see them [right here](https://github.com/CorvoCS08/content_sumarizer/blob/e1af1bbfe65947a1005473d1062f39f9e9d977ce/src/core.py#L148-L162).
+4. **Application Defaults:** The program's default values. You can see them [right here](https://github.com/CorvoCS08/content_sumarizer/blob/9f8329ff23bd8e070ad6cfd3770724981ea9d7ce/src/core.py#L148-L162).
 
 ## Using the Remote Transcription API
 
