@@ -351,17 +351,19 @@ def _save_transcription(
     doesn't already exist.
     """
     if not transcription_file_path.exists():
-        # Assert and default arguments are only for linter
-        # It'll never be None because of _check_required_config_params()
-        assert config.api_url
-        assert config.api_key
-        transcription_fetcher: dict[bool, Callable[[], str]] = {
-            True: lambda url=config.api_url,
-            key=config.api_key: fetch_transcription_api(
-                url,
+
+        def _fetch_from_api() -> str:
+            """Handle API transcription, including prerequisite checks."""
+            assert config.api_url, "API URL is required for API mode"
+            assert config.api_key, "API key is required for API mode"
+            return fetch_transcription_api(
+                config.api_url,
                 accelerated_audio_path,
-                key,
-            ),
+                config.api_key,
+            )
+
+        transcription_fetcher: dict[bool, Callable[[], str]] = {
+            True: _fetch_from_api,
             False: lambda: fetch_transcription_local(
                 accelerated_audio_path,
                 config.whisper_model,
