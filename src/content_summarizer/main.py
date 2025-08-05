@@ -22,11 +22,11 @@ core functions. It acts as the primary orchestrator and final error handler.
 import logging
 import sys
 
-from .cli import parse_arguments
-from .core import handle_config_command, summarize_video_pipeline
-from .managers.path_manager import PathManager
-from .utils.logger_config import setup_logging
-from .utils.warning_config import setup_warnings
+from content_summarizer.cli import parse_arguments
+from content_summarizer.core import handle_config_command, summarize_video_pipeline
+from content_summarizer.managers.path_manager import PathManager
+from content_summarizer.utils.logger_config import setup_logging
+from content_summarizer.utils.warning_config import setup_warnings
 
 
 def main() -> None:

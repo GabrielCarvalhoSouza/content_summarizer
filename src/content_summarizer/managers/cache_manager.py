@@ -25,7 +25,7 @@ import logging
 from dataclasses import asdict
 from pathlib import Path
 
-from ..data.data_models import VideoMetadata
+from content_summarizer.data.data_models import VideoMetadata
 
 logger: logging.Logger = logging.getLogger(__name__)
 

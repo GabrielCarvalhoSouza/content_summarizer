@@ -25,7 +25,7 @@ from typing import Self
 from pytubefix import Stream, YouTube
 from pytubefix.captions import Caption
 
-from .video_service_interface import BaseVideoService
+from content_summarizer.services.video_service_interface import BaseVideoService
 
 logger: logging.Logger = logging.getLogger(__name__)
 

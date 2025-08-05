@@ -44,17 +44,17 @@ from google.generativeai.generative_models import GenerativeModel
 from rich.console import Console
 from rich.markdown import Markdown
 
-from .data.data_models import VideoMetadata
-from .managers.cache_manager import CacheManager
-from .managers.config_manager import ConfigManager
-from .managers.path_manager import PathManager
-from .processors.audio_processor import AudioProcessor
-from .services.summary_service import generate_summary
-from .services.transcription_service import (
+from content_summarizer.data.data_models import VideoMetadata
+from content_summarizer.managers.cache_manager import CacheManager
+from content_summarizer.managers.config_manager import ConfigManager
+from content_summarizer.managers.path_manager import PathManager
+from content_summarizer.processors.audio_processor import AudioProcessor
+from content_summarizer.services.summary_service import generate_summary
+from content_summarizer.services.transcription_service import (
     fetch_transcription_api,
     fetch_transcription_local,
 )
-from .services.youtube_service import YoutubeService
+from content_summarizer.services.youtube_service import YoutubeService
 
 
 class SetupError(Exception):
