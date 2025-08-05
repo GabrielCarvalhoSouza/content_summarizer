@@ -2,11 +2,11 @@
 
 ## A tool to summarize YouTube videos using AI
 
-Você já achou um vídeo do YouTube que você achou interessante o suficiente mas não tinha tempo para vê-lo? Com o Content Summarizer isso é possível! Obtenha resumos de alta qualidade de qualquer vídeo do Youtube completamente de graça através de um programa de linha de comando (CLI)!
+Ever found a YouTube video that seemed interesting but you didn't have time to watch it? With Content Summarizer, that's no longer a problem! Get high-quality summaries of any YouTube video for free through a simple and powerful command-line interface (CLI).
 
 ## Features
 
-- **Smart Caption/Transcription:** Automatically uses existing manual captions for speed, or falls back to highly accurate local transcription using Faster-Whisper.
+- **Smart Sourcing:** Automatically uses existing manual captions for speed, or falls back to highly accurate local transcription using Faster-Whisper.
 - **Intelligent Summaries:** Leverages the Gemini API to generate clear, concise, and context-aware summaries.
 - **Multi-language Support:** Delivers summaries in your system's native language.
 - **Flexible Transcription:** Offers the choice between local processing (via Faster-Whisper) or a remote transcription API.
@@ -41,29 +41,101 @@ pip install content-summarizer
 
 ## Usage
 
-### Basic Summarization
+The application has two main commands: `summarize` and `config`.
+
+- `summarize`: Fetches and summarizes a given YouTube URL. This is the main command.
+- `config`: Sets default values for flags, so you don't have to type them on every run. These settings are saved in a system-specific user configuration directory.
+
+For a full list of all commands and flags, run `content-summarizer --help`.
+
+### The `summarize` Command
+
+**Basic Usage**
 
 ```bash
 content-summarizer summarize "YOUR_YOUTUBE_URL_HERE"
-
-# Example Usage
-content-summarizer summarize "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 ```
 
-### Common Flags
+#### Common Summarize Flags
 
 ```bash
-# Reduce Verbosity
-content-summarizer summarize "YOUR_YOUTUBE_URL_HERE" -q
-
-# Change the audio speed factor for faster transcriptions (In this case the speed factor will be 3.0)
-content-summarizer summarize "YOUR_YOUTUBE_URL_HERE" -s 3
+# Change the audio speed factor for faster transcriptions
+content-summarizer summarize "YOUR_YOUTUBE_URL_HERE" -s 2.5
 
 # Change Whisper (Faster-Whisper) Model
 content-summarizer summarize "YOUR_YOUTUBE_URL_HERE" -w large-v2
 
 # Change Gemini Model
 content-summarizer summarize "YOUR_YOUTUBE_URL_HERE" -g 2.5-pro
+
+# Decrease console verbosity (shows only warnings and errors)
+content-summarizer summarize "YOUR_YOUTUBE_URL_HERE" -q
+
+# Make the console output completely silent (summary output still works)
+content-summarizer summarize "YOUR_YOUTUBE_URL_HERE" -qq
+
+# Disable the summary output in the terminal
+content-summarizer summarize "YOUR_YOUTUBE_URL_HERE" --no-terminal
+
+# Specify an output path for the creation of an output summary file alongside the normal terminal output
+content-summarizer summarize "YOUR_YOUTUBE_URL_HERE" -o "YOUR_OUTPUT_PATH_HERE"
+
+# Keep the cache directory after execution for re-runs
+content-summarizer summarize "YOUR_YOUTUBE_URL_HERE" -c
 ```
 
-You can use multiple flags together, for a complete list of all flags use `content-summarizer -h` or `content-summarizer --help`
+### The `config` Command
+
+#### Common Config Flags
+
+```bash
+# Specify default output path
+content-summarizer config -o "YOUR_OUTPUT_PATH_HERE"
+
+# Specify default speed factor
+content-summarizer config -s 1.5
+
+# Specify default API KEY
+content-summarizer config --api-key "YOUR_OWN_WHISPER_API_KEY_HERE"
+
+# Specify default Google AI Studio API KEY
+content-summarizer config --gemini-key "YOUR_GOOGLE_AI_KEY_HERE"
+```
+
+## Configuration
+
+The application resolves settings with the following priority order:
+
+1. Command-line Flags: Always takes top priority for the current run.
+
+2. Environment Variables: Loaded from an `.env` file or system environments.
+
+3. User Configuration: Defaults set via the `config` command.
+
+4. **Application Defaults:** The program's default values. You can see them [right here](https://github.com/CorvoCS08/content_sumarizer/blob/e1af1bbfe65947a1005473d1062f39f9e9d977ce/src/core.py#L148-L162).
+
+## Using the Remote Transcription API
+
+The `--api` flag allows you to offload transcription to a remote server. This project includes a simple Flask API in the `flask_api/` directory that you can deploy yourself.
+
+To use this feature, you must:
+
+1.  Deploy the application found in the `flask_api/` folder to a server of your choice.
+2.  Use the `--api-url` and `--api-key` flags (or set them as defaults using the `config` command) to point the CLI to your deployed API.
+
+Fell free to use your own API key, you just need to put it in the API `.env`. I recommend the use of the following script to generate a safe API key, just copy and paste in any terminal:
+
+```bash
+
+python -c "import secrets, string; print(''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(30)))"
+```
+
+A detailed deployment guide is beyond the scope of this README.
+
+## A Note on Warnings
+
+> You may see some warnings (like UserWarning: pkg_resources is deprecated...) when running the application. This is expected. All mitigations to suppress non-critical warnings have been implemented in the code, but some warnings may still appear if they are generated during the import process of a third-party library. These warnings are harmless and can be safely ignored.
+
+## License
+
+This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
