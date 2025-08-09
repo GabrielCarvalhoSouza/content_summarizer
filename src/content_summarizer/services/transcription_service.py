@@ -108,6 +108,7 @@ def fetch_transcription_api(api_url: str, audio_file_path: Path, api_key: str) -
     try:
         with audio_file_path.open("rb") as f:
             files: dict[str, IO[bytes]] = {"audio": f}
+            logger.info("Initializing transcription")
             response: requests.Response = requests.post(
                 api_url,
                 files=files,
