@@ -33,7 +33,9 @@ logger: logging.Logger = logging.getLogger(__name__)
 class CacheManager:
     """A stateless utility class for handling cache file operations."""
 
-    def _write_to_file(self, content: str, file_path: Path) -> None:
+    def _write_to_file(
+        self, content: str, file_path: Path, log_success: bool = True
+    ) -> None:
         """Private helper method to write text content to a specified file path.
 
         This method is the core of the cache writing logic, handling directory
@@ -42,6 +44,7 @@ class CacheManager:
         Args:
             content: The string content to be written to the file.
             file_path: The destination file path.
+            log_success: Whether to log a success message.
 
         Raises:
             OSError: If the file cannot be written due to I/O or permission issues.
@@ -51,28 +54,35 @@ class CacheManager:
         try:
             with file_path.open("w", encoding="utf-8") as f:
                 f.write(content)
-
-            logger.info("File saved successfully to %s", file_path)
+            if log_success:
+                logger.info("File saved successfully to %s", file_path)
         except OSError:
-            logger.exception("Failed to save file")
+            if log_success:
+                logger.exception("Failed to save file")
             raise
 
     def save_metadata_file(
-        self, video_metadata: VideoMetadata, metadata_file_path: Path
+        self,
+        video_metadata: VideoMetadata,
+        metadata_file_path: Path,
+        log_success: bool = True,
     ) -> None:
         """Serialize VideoMetadata to JSON and saves it to a file.
 
         Args:
             video_metadata: The dataclass object to be saved.
             metadata_file_path: The destination file path for the metadata.
+            log_success: Whether to log a success message.
 
         """
         video_metadata_dict = asdict(video_metadata)
         json_content = json.dumps(video_metadata_dict, indent=4)
 
-        self._write_to_file(json_content, metadata_file_path)
+        self._write_to_file(json_content, metadata_file_path, log_success)
 
-    def save_text_file(self, text: str, text_file_path: Path) -> None:
+    def save_text_file(
+        self, text: str, text_file_path: Path, log_success: bool = True
+    ) -> None:
         """Save a plain text string to a specified file path.
 
         Used for saving content like captions, transcriptions, or summaries.
@@ -80,6 +90,7 @@ class CacheManager:
         Args:
             text: The text content to save.
             text_file_path: The destination file path.
+            log_success: Whether to log a success message.
 
         """
-        self._write_to_file(text, text_file_path)
+        self._write_to_file(text, text_file_path, log_success)

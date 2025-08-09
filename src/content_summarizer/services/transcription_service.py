@@ -111,7 +111,7 @@ def fetch_transcription_api(api_url: str, audio_file_path: Path, api_key: str) -
             response: requests.Response = requests.post(
                 api_url,
                 files=files,
-                timeout=1800,
+                timeout=3610,
                 headers={"X-Api-Key": api_key},
             )
         response.raise_for_status()

@@ -317,9 +317,11 @@ def build_app_config(
     )
 
 
-def _save_caption(config: AppConfig, caption: str) -> None:
+def _save_caption(config: AppConfig, caption: str, log_success: bool) -> None:
     """Save the provided caption text to a cache file."""
-    config.cache_manager.save_text_file(caption, config.path_manager.caption_file_path)
+    config.cache_manager.save_text_file(
+        caption, config.path_manager.caption_file_path, log_success
+    )
 
 
 def _save_accelerated_audio(config: AppConfig, accelerated_audio_path: Path) -> None:
@@ -341,7 +343,10 @@ def _save_accelerated_audio(config: AppConfig, accelerated_audio_path: Path) -> 
 
 
 def _save_transcription(
-    config: AppConfig, accelerated_audio_path: Path, transcription_file_path: Path
+    config: AppConfig,
+    accelerated_audio_path: Path,
+    transcription_file_path: Path,
+    log_success: bool,
 ) -> None:
     """Ensure the transcription file exists, creating it if necessary.
 
@@ -378,10 +383,14 @@ def _save_transcription(
         if not transcription:
             raise PipelineError("Failed to fetch transcription")
 
-        config.cache_manager.save_text_file(transcription, transcription_file_path)
+        config.cache_manager.save_text_file(
+            transcription, transcription_file_path, log_success
+        )
 
 
-def _prepare_source_file(config: AppConfig, caption: str | None) -> Path:
+def _prepare_source_file(
+    config: AppConfig, caption: str | None, log_success: bool
+) -> Path:
     """Prepare the source text file for summarization.
 
     This function acts as a dispatcher. If a manual caption is available,
@@ -391,13 +400,14 @@ def _prepare_source_file(config: AppConfig, caption: str | None) -> Path:
     Args:
         config: The application's configuration object.
         caption: The pre-fetched caption text, or None.
+        log_success: Whether to log a success message.
 
     Returns:
         The path to the prepared source text file (caption or transcription).
 
     """
     if caption:
-        _save_caption(config, caption)
+        _save_caption(config, caption, log_success)
         return config.path_manager.caption_file_path
 
     accelerated_audio_path: Path = config.path_manager.get_accelerated_audio_path(
@@ -407,7 +417,9 @@ def _prepare_source_file(config: AppConfig, caption: str | None) -> Path:
         config.whisper_model, config.speed_factor, config.beam_size
     )
     _save_accelerated_audio(config, accelerated_audio_path)
-    _save_transcription(config, accelerated_audio_path, transcription_file_path)
+    _save_transcription(
+        config, accelerated_audio_path, transcription_file_path, log_success
+    )
 
     return transcription_file_path
 
@@ -442,6 +454,10 @@ def summarize_video_pipeline(
         raise SetupError("An error occurred during the setup") from e
 
     try:
+        _log_success: bool = True
+        if not config.keep_cache:
+            _log_success = False
+
         caption: str | None = config.youtube_service.find_best_captions(
             config.user_language
         )
@@ -456,9 +472,10 @@ def summarize_video_pipeline(
         config.cache_manager.save_metadata_file(
             video_metadata,
             path_manager.metadata_file_path,
+            _log_success,
         )
 
-        source_path = _prepare_source_file(config, caption)
+        source_path = _prepare_source_file(config, caption, _log_success)
 
         summary_file_path: Path = path_manager.get_summary_path(
             config.gemini_model_name,
@@ -475,7 +492,9 @@ def summarize_video_pipeline(
         )
 
         if summary:
-            config.cache_manager.save_text_file(summary, summary_file_path)
+            config.cache_manager.save_text_file(
+                summary, summary_file_path, _log_success
+            )
 
         if summary and not config.no_terminal:
             console: Console = Console()
