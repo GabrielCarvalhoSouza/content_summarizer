@@ -1,19 +1,19 @@
-# Content Summarizer
+# 📝Content Summarizer
 
-## A tool to summarize YouTube videos using AI
+## ✨ A tool to summarize YouTube videos using AI
 
 Ever found a YouTube video that seemed interesting but you didn't have time to watch it? With Content Summarizer, that's no longer a problem! Get high-quality summaries of any YouTube video for free through a simple and powerful command-line interface (CLI).
 
-## Features
+## 🚀 Features
 
-- **Smart Sourcing:** Automatically uses existing manual captions for speed, or falls back to highly accurate local transcription using Faster-Whisper.
-- **Intelligent Summaries:** Leverages the Gemini API to generate clear, concise, and context-aware summaries.
-- **Multi-language Support:** Delivers summaries in your system's native language.
-- **Flexible Transcription:** Offers the choice between local processing (via Faster-Whisper) or a remote transcription API.
-- **Performance Control:** Adjust the audio speed factor for faster transcriptions on local processing.
-- **Simple & Powerful CLI:** A clean and intuitive command-line interface for easy use.
+- 🔍 **Smart Sourcing:** Automatically uses existing manual captions for speed, or falls back to highly accurate local transcription using Faster-Whisper.
+- 🧠 **Intelligent Summaries:** Leverages the Gemini API to generate clear, concise, and context-aware summaries.
+- 🌐 **Multi-language Support:** Delivers summaries in your system's native language.
+- 🔄 **Flexible Transcription:** Offers the choice between local processing (via Faster-Whisper) or a remote transcription API.
+- ⚡ **Performance Control:** Adjust the audio speed factor for faster transcriptions on local processing.
+- 💻 **Simple & Powerful CLI:** A clean and intuitive command-line interface for easy use.
 
-## Installation
+## ⬇️ Installation
 
 ### Prerequisites
 
@@ -39,12 +39,12 @@ You can also use the standard `pip`, but be aware that it will install the packa
 pip install content-summarizer
 ```
 
-## Usage
+## 💡 Usage
 
 The application has two main commands: `summarize` and `config`.
 
-- `summarize`: Fetches and summarizes a given YouTube URL. This is the main command.
-- `config`: Sets default values for flags, so you don't have to type them on every run. These settings are saved in a system-specific user configuration directory.
+- 🎬 `summarize`: Fetches and summarizes a given YouTube URL. This is the main command.
+- ⚙️ `config`: Sets default values for flags, so you don't have to type them on every run. These settings are saved in a system-specific user configuration directory.
 
 For a full list of all commands and flags, run `content-summarizer --help`.
 
@@ -102,7 +102,7 @@ content-summarizer config --api-key "YOUR_OWN_WHISPER_API_KEY_HERE"
 content-summarizer config --gemini-key "YOUR_GOOGLE_AI_KEY_HERE"
 ```
 
-## Configuration
+## 🛠️ Configuration
 
 The application resolves settings with the following priority order:
 
@@ -114,13 +114,13 @@ The application resolves settings with the following priority order:
 
 4. **Application Defaults:** The program's default values. You can see them [right here](https://github.com/CorvoCS08/content_sumarizer/blob/9f8329ff23bd8e070ad6cfd3770724981ea9d7ce/src/core.py#L148-L162).
 
-## Using the Remote Transcription API
+## 📡 Using the Remote Transcription API
 
 The `--api` flag allows you to offload transcription to a remote server. This project includes a simple Flask API in the `flask_api/` directory that you can deploy yourself.
 
 To set up the API, you will need to install its specific dependencies:
 
-```Bash
+```bash
 # Navigate to the api directory
 cd flask_api/
 
@@ -142,10 +142,10 @@ python -c "import secrets, string; print(''.join(secrets.choice(string.ascii_let
 
 A detailed deployment guide is beyond the scope of this README.
 
-## A Note on Warnings
+## ⚠️ A Note on Warnings
 
 > You may see some warnings (like UserWarning: pkg_resources is deprecated...) when running the application. This is expected. All mitigations to suppress non-critical warnings have been implemented in the code, but some warnings may still appear if they are generated during the import process of a third-party library. These warnings are harmless and can be safely ignored.
 
-## License
+## 📄 License
 
 This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.

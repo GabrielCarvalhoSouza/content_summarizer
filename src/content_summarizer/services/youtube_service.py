@@ -112,6 +112,7 @@ class YoutubeService(BaseVideoService):
             if ys is None:
                 logger.error("Audio stream not found")
                 raise DownloadError("Audio stream not found")
+            logger.info("Downloading audio...")
             ys.download(output_path=str(output_path), filename=filename)
             logger.info("Audio downloaded successfully")
         except Exception as e:

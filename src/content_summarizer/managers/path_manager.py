@@ -66,7 +66,7 @@ class PathManager:
         return hash_params.hexdigest()[:7]
 
     @staticmethod
-    def sanitize_video_title(video_title: str) -> str:
+    def _sanitize_video_title(video_title: str) -> str:
         """Sanitize a string to be used as a safe filename.
 
         This method performs the following operations:
@@ -182,7 +182,7 @@ class PathManager:
             The full, final path for the summary file.
 
         """
-        safe_title: str = self.sanitize_video_title(video_title)
+        safe_title: str = self._sanitize_video_title(video_title)
         return output_dir / f"{safe_title}.md"
 
     @property

@@ -74,13 +74,14 @@ def generate_summary(
 
             Core Mission: Summarize all key points with clarity and objectivity. Capture the essence of the content.
             Formatting Freedom: Feel free to use bullet points, standard paragraphs, or a hybrid format—whichever presents the information most effectively and clearly.
-            Word Count: Be as concise as possible, but you can go up to 2000 words if the content's complexity truly justifies it. No need to fill space unnecessarily.
+            Word Count: Be as concise as possible, but you can go up to  1500 words if the content's complexity truly justifies it. No need to fill space unnecessarily.
             Match the Vibe: If the video is casual and humorous, reflect that with some clever wit, but keep the core information sharp. If the content is serious, dial back the jokes but maintain an engaging, non-robotic tone. A light, witty remark is fine even in serious topics.
             Be Seamless: Dive right into the summary. Do not use opening phrases like "This is a summary of..." or "The video discusses...".
-            Output Language: The summary must be written in {user_language}. Always output in Markdown format.
+            Output Language: The summary must be written in {user_language}. Always output in Markdown format. Ignore self-promosions or ads.
             Content: {transcription_content}
             """)  # noqa: E501
     try:
+        logger.info("Generating summary...")
         res: GenerateContentResponse = gemini_model.generate_content(prompt)
         logger.info("Summary generated successfully")
         return res.text

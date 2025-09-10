@@ -71,7 +71,7 @@ def fetch_transcription_local(
         whisper_model = WhisperModel(
             whisper_model_name, device=device, compute_type=compute_type
         )
-        logger.info("Initializing transcription")
+        logger.info("Initializing transcription...")
 
         segments: Iterable[Segment]
         segments, _ = whisper_model.transcribe(
@@ -108,7 +108,7 @@ def fetch_transcription_api(api_url: str, audio_file_path: Path, api_key: str) -
     try:
         with audio_file_path.open("rb") as f:
             files: dict[str, IO[bytes]] = {"audio": f}
-            logger.info("Initializing transcription")
+            logger.info("Initializing transcription...")
             response: requests.Response = requests.post(
                 api_url,
                 files=files,

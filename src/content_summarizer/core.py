@@ -485,11 +485,18 @@ def summarize_video_pipeline(
             config.beam_size,
         )
 
-        summary = generate_summary(
-            config.gemini_model,
-            config.user_language,
-            source_path,
-        )
+        summary: str | None = None
+        if summary_file_path.exists():
+            config.logger.info("Summary found in cache, loading from file.")
+            with summary_file_path.open("r", encoding="utf-8") as f:
+                summary = f.read()
+
+        if not summary:
+            summary = generate_summary(
+                config.gemini_model,
+                config.user_language,
+                source_path,
+            )
 
         if summary:
             config.cache_manager.save_text_file(
@@ -499,7 +506,9 @@ def summarize_video_pipeline(
         if summary and not config.no_terminal:
             console: Console = Console()
             markdown_summary: Markdown = Markdown(summary)
+            console.print("-" * console.width)
             console.print(markdown_summary)
+            console.print("-" * console.width)
 
         if summary and config.output_path:
             summary_output_path: Path = path_manager.get_final_summary_path(
@@ -541,6 +550,7 @@ def handle_config_command(
     config_manager: ConfigManager = ConfigManager(path_manager.config_file_path)
 
     try:
+        logger.info("Saving configuration...")
         current_configs: dict[str, Any] = config_manager.load_config(is_config=True)
         dict_args: dict[str, Any] = vars(args)
 

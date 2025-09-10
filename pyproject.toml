@@ -1,6 +1,6 @@
 [project]
 name = "content-summarizer"
-version = "1.0.2"
+version = "1.1.0"
 description = "A command-line tool to summarize YouTube videos using AI."
 authors = [
     { name = "Gabriel Carvalho", email = "gcarvalho2112@gmail.com" },
@@ -47,7 +47,7 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "C90", "UP", "D", "SIM", "T20", "ANN", "PTH", "RET", "ERA"]
-ignore = ["T201", "COM812", "ANN101", "ANN102"]
+ignore = ["D100", "D104", "T201", "COM812", "ANN101", "ANN102"]
 
 [tool.ruff.format]
 quote-style = "double"
