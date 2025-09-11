@@ -73,7 +73,7 @@ class AudioProcessor:
             raise AudioProcessingError("Input audio file does not exist")
         if speed_factor == 1.0:
             shutil.copy(self._input_path, self._output_path)
-            logger.warning("Speed factor is 1.0, skipping audio acceleration")
+            logger.warning("Speed factor is 1.0x, skipping audio acceleration")
             return
         _speed_factor = str(speed_factor)
         ffmpeg = [
@@ -86,8 +86,9 @@ class AudioProcessor:
             str(self._output_path),
         ]
         try:
+            logger.info(f"Accelerating audio {_speed_factor}x times")
             subprocess.run(ffmpeg, check=True, capture_output=True, text=True)
-            logger.info(f"Audio accelerated {_speed_factor}x successfully")
+            logger.info(f"Audio accelerated {_speed_factor}x times successfully")
         except subprocess.CalledProcessError as e:
             logger.exception("Audio acceleration found an error: %s", e.stderr)
             raise AudioProcessingError("Audio acceleration found an error") from e

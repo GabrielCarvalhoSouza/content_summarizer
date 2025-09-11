@@ -86,7 +86,11 @@ def parse_arguments() -> argparse.Namespace:
         "-c",
         "--keep-cache",
         action="store_true",
-        help="Prevent the deletion of cache files after execution.",
+        help=(
+            "Prevent the deletion of cache files after execution. "
+            "Once used for a video, its cache will be permanently kept "
+            "unless the cache folder is manually deleted."
+        ),
     )
 
     parser_summarize.add_argument(

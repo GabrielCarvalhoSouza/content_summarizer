@@ -81,7 +81,7 @@ def generate_summary(
             Content: {transcription_content}
             """)  # noqa: E501
     try:
-        logger.info("Generating summary...")
+        logger.info("Generating summary")
         res: GenerateContentResponse = gemini_model.generate_content(prompt)
         logger.info("Summary generated successfully")
         return res.text

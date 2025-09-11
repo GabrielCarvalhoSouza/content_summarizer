@@ -61,7 +61,7 @@ class YoutubeService(BaseVideoService):
 
         """
         self._yt = YouTube(source_url)
-        logger.info("Loaded video: %s from URL: %s", self.title, source_url)
+        logger.info('Loaded video: "%s" from URL: "%s"', self.title, source_url)
         return self
 
     @property
@@ -112,7 +112,7 @@ class YoutubeService(BaseVideoService):
             if ys is None:
                 logger.error("Audio stream not found")
                 raise DownloadError("Audio stream not found")
-            logger.info("Downloading audio...")
+            logger.info("Downloading audio")
             ys.download(output_path=str(output_path), filename=filename)
             logger.info("Audio downloaded successfully")
         except Exception as e:
@@ -142,7 +142,6 @@ class YoutubeService(BaseVideoService):
 
         """
         if not self.yt.captions:
-            logger.warning("No captions found for video")
             return None
 
         priority_codes = [user_language]
@@ -157,12 +156,11 @@ class YoutubeService(BaseVideoService):
         for code in priority_codes:
             caption: Caption | None = self.yt.captions.get(code)
             if caption is not None and not caption.code.startswith("a."):
-                logger.info("Found manual caption in system language or English")
+                logger.info("Found manual caption")
                 return caption.generate_txt_captions()
 
         for caption in self.yt.captions:
             if not caption.code.startswith("a."):
-                logger.warning("Found manual caption in any language")
+                logger.info("Found manual caption")
                 return caption.generate_txt_captions()
-        logger.warning("No captions found for video")
         return None

@@ -51,9 +51,9 @@ def main() -> None:
             handle_config_command(args, logger, path_manager)
             return
         summarize_video_pipeline(args, logger, path_manager)
-        logger.info("Application completed successfully.")
+        logger.info("Application completed successfully")
     except Exception:
-        logger.critical("Fatal error occurred. Exiting application.")
+        logger.critical("Fatal error occurred. Exiting application")
         sys.exit(1)
 
 

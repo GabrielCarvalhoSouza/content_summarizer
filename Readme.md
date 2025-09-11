@@ -142,10 +142,6 @@ python -c "import secrets, string; print(''.join(secrets.choice(string.ascii_let
 
 A detailed deployment guide is beyond the scope of this README.
 
-## ⚠️ A Note on Warnings
-
-> You may see some warnings (like UserWarning: pkg_resources is deprecated...) when running the application. This is expected. All mitigations to suppress non-critical warnings have been implemented in the code, but some warnings may still appear if they are generated during the import process of a third-party library. These warnings are harmless and can be safely ignored.
-
 ## 📄 License
 
 This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.

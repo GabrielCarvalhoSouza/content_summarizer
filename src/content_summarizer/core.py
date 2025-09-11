@@ -205,19 +205,19 @@ def _check_required_config_params(
 
     """
     if final_config["gemini_key"] == "":
-        logger.error("Gemini API key is required, use the --gemini-key flag.")
-        raise ValueError("Gemini API key is required.")
+        logger.error("Gemini API key is required, use the --gemini-key flag")
+        raise ValueError("Gemini API key is required")
 
     if not final_config["api"]:
         return
 
     if not final_config["api_url"]:
-        logger.error("API URL is required when API mode is enabled.")
-        raise ValueError("API URL is required when API mode is enabled.")
+        logger.error("API URL is required when API mode is enabled")
+        raise ValueError("API URL is required when API mode is enabled")
 
     if not final_config["api_key"]:
-        logger.error("API key is required when API mode is enabled.")
-        raise ValueError("API key is required when API mode is enabled.")
+        logger.error("API key is required when API mode is enabled")
+        raise ValueError("API key is required when API mode is enabled")
 
 
 def _get_user_system_language(logger: logging.Logger) -> str:
@@ -388,6 +388,40 @@ def _save_transcription(
         )
 
 
+def _handle_metadata(config: AppConfig, log_success: bool) -> None:
+    """Manage the creation and state of the video's metadata file.
+
+    This function ensures the metadata file exists and correctly handles the
+    persistence of the 'keep_cache' flag. It reads any existing metadata to
+    check if the cache was previously marked for persistence. The flag is then
+    made "sticky," meaning once it's set to True, it will not be reverted to
+    False by subsequent runs that don't use the --keep-cache flag.
+
+    Args:
+        config: The application's configuration object, containing all necessary
+                services and settings.
+        log_success: Whether to log a success message upon saving the file.
+
+    """
+    _existing_keep_cache: bool = config.cache_manager.read_keep_cache_flag(
+        config.path_manager.metadata_file_path
+    )
+    _final_keep_cache: bool = _existing_keep_cache or config.keep_cache
+    video_metadata: VideoMetadata = VideoMetadata(
+        id=config.youtube_service.video_id,
+        url=config.url,
+        title=config.youtube_service.title,
+        author=config.youtube_service.author,
+        keep_cache=_final_keep_cache,
+    )
+
+    config.cache_manager.save_metadata_file(
+        video_metadata,
+        config.path_manager.metadata_file_path,
+        log_success,
+    )
+
+
 def _prepare_source_file(
     config: AppConfig, caption: str | None, log_success: bool
 ) -> Path:
@@ -461,19 +495,7 @@ def summarize_video_pipeline(
         caption: str | None = config.youtube_service.find_best_captions(
             config.user_language
         )
-
-        video_metadata: VideoMetadata = VideoMetadata(
-            id=config.youtube_service.video_id,
-            url=config.url,
-            title=config.youtube_service.title,
-            author=config.youtube_service.author,
-        )
-
-        config.cache_manager.save_metadata_file(
-            video_metadata,
-            path_manager.metadata_file_path,
-            _log_success,
-        )
+        _handle_metadata(config, _log_success)
 
         source_path = _prepare_source_file(config, caption, _log_success)
 
@@ -487,7 +509,7 @@ def summarize_video_pipeline(
 
         summary: str | None = None
         if summary_file_path.exists():
-            config.logger.info("Summary found in cache, loading from file.")
+            config.logger.info("Summary found in cache, loading from file")
             with summary_file_path.open("r", encoding="utf-8") as f:
                 summary = f.read()
 
@@ -514,19 +536,20 @@ def summarize_video_pipeline(
             summary_output_path: Path = path_manager.get_final_summary_path(
                 config.youtube_service.title, config.output_path
             )
-            config.cache_manager.save_text_file(summary, summary_output_path)
+            # False because we have an better log message literally below
+            config.cache_manager.save_text_file(summary, summary_output_path, False)
             logger.info(f"Summary saved to {summary_output_path}")
 
     except Exception as e:
         config.logger.exception("An error occurred during the pipeline")
         raise PipelineError("An error occurred during the pipeline:") from e
     finally:
-        if config and path_manager.video_dir_path.exists() and not config.keep_cache:
+        _keep_cache: bool = config.cache_manager.read_keep_cache_flag(
+            config.path_manager.metadata_file_path
+        )
+        if path_manager.video_dir_path.exists() and not _keep_cache:
             rmtree(path_manager.video_dir_path)
-            logger.info(
-                "Cache cleared, use --keep-cache to keep the video cache dir "
-                "for further runs."
-            )
+            logger.info("Cache cleared")
 
 
 def handle_config_command(
@@ -550,7 +573,7 @@ def handle_config_command(
     config_manager: ConfigManager = ConfigManager(path_manager.config_file_path)
 
     try:
-        logger.info("Saving configuration...")
+        logger.info("Saving configuration")
         current_configs: dict[str, Any] = config_manager.load_config(is_config=True)
         dict_args: dict[str, Any] = vars(args)
 
@@ -565,7 +588,7 @@ def handle_config_command(
             current_configs[key] = value
 
         config_manager.save_config(current_configs)
-        logger.info("Configuration saved successfully.")
+        logger.info("Configuration saved successfully")
     except OSError:
-        logger.exception("Failed to save configuration.")
+        logger.exception("Failed to save configuration")
         raise

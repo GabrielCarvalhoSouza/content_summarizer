@@ -55,22 +55,22 @@ class ConfigManager:
             empty dictionary if an error occurs.
 
         """
-        if not self._config_file.is_file() and not is_config:
+        if self._config_file.is_file():
+            try:
+                with self._config_file.open("r") as f:
+                    return json.load(f)
+            except json.JSONDecodeError:
+                logger.warning(
+                    "Configuration file is corrupted or invalid. "
+                    "The application will run with its internal settings instead"
+                )
+
+        if not is_config:
             logger.info(
                 "Configuration file not found. "
-                "The application will run with its internal settings."
+                "The application will run with its internal settings"
             )
-            return {}
-
-        try:
-            with self._config_file.open("r") as f:
-                return json.load(f)
-        except json.JSONDecodeError:
-            logger.warning(
-                "Configuration file is corrupted or invalid. "
-                "The application will run with its internal settings instead."
-            )
-            return {}
+        return {}
 
     def save_config(self, config_data: dict[str, Any]) -> None:
         """Save a dictionary of configurations to the config.json file.

@@ -85,8 +85,6 @@ class CacheManager:
     ) -> None:
         """Save a plain text string to a specified file path.
 
-        Used for saving content like captions, transcriptions, or summaries.
-
         Args:
             text: The text content to save.
             text_file_path: The destination file path.
@@ -94,3 +92,20 @@ class CacheManager:
 
         """
         self._write_to_file(text, text_file_path, log_success)
+
+    def read_keep_cache_flag(self, metadata_path: Path) -> bool:
+        """Safely reads the 'keep_cache' flag from the metadata file.
+
+        Args:
+            metadata_path: The path to the metadata file.
+
+        Returns:
+            True if 'keep_cache' is set to True, False otherwise.
+
+        """
+        try:
+            with metadata_path.open("r", encoding="utf-8") as f:
+                metadata = json.load(f)
+                return metadata.get("keep_cache", False)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return False

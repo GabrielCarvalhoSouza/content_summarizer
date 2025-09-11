@@ -30,6 +30,7 @@ class VideoMetadata:
         url: The original URL of the video.
         title: The title of the video.
         author: The creator or channel name of the video.
+        keep_cache: Used to prevent cache deletion on further runs.
 
     """
 
@@ -37,3 +38,4 @@ class VideoMetadata:
     url: str
     title: str
     author: str
+    keep_cache: bool

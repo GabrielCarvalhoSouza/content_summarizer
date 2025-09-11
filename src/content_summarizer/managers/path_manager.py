@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from hashlib import _Hash
 
 app_name = "content-summarizer"
-app_author = "Content Summarizer"
+app_author = "content-summarizer"
 
 logger = logging.getLogger(__name__)
 
